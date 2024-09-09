@@ -1,0 +1,96 @@
+<article id="mypage_favorite">
+    <header>
+        <h5>내가 찜한 영화</h5>
+    </header>
+    <section>
+        <div class="row">
+            <div class="col-3" th:each="movie : ${favoriteMovies}">
+                <div class="movie-item-favorite">
+                    <input class="movie-id" type="hidden" th:value="${movie.movieId}" />
+                    <div class="favorite-container">
+                        <img id="favoriteButton" class="fav-icon favorited favorite-btn"
+                             src="/images/heart%20icon.png" alt="찜하기(좋아요)">
+                    </div>
+                    <a th:href="@{'/movies/' + ${movie.movieId}}">
+                        <img class="featured-img"
+                             th:src="${movie.moviePosterUrl != 'null' ? 'https://image.tmdb.org/t/p/w200' + movie.moviePosterUrl : '/images/img_not_ready2.png'}" alt="poster">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="info-none" th:unless="${hasFavorites}">
+        <img src="/images/magnifier2.png" alt="돋보기 이미지" />
+        <a href="/allMovies"><p>아직 찜한 영화가 없습니다.<br/> 마음에 드는 영화를 찾아 찜해보세요!</p></a>
+    </section>
+</article>
+<!-- 스윗 얼럿 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script type="module" src="/modules/alerts.js"></script>
+
+<script th:inline="javascript">
+    $(document).ready(function () {
+        const userEmail = /*[[${#authentication.name}]]*/ 'defaultEmail@example.com';
+
+        // "좋아요" 버튼 클릭 이벤트
+        $('#mypage_favorite').on('click', '.favorite-btn', function () {
+            const button = $(this);
+            const movieId = button.closest('.movie-item-favorite').find('.movie-id').val();
+            const isFavorited = button.hasClass('favorited');
+
+            if (isFavorited) {
+                // 이미 "좋아요" 상태인 경우, 삭제 요청 전에 확인 메시지 띄우기
+                deleteConfirm().then((confirmed) => {
+                    if (confirmed) {
+                        $.ajax({
+                            url: '/favorites/' + userEmail + '/' + movieId,
+                            type: 'DELETE',
+                            success: function (response) {
+                                updateFavoriteButton(button, false); // 삭제 성공 시 버튼 UI 업데이트
+                            },
+                            error: function (xhr, status, error) {
+                                console.error("좋아요 삭제 실패", error);
+                            }
+                        });
+                    } else {
+                        // "좋아요" 등록 요청 보내기
+                        $.ajax({
+                            url: '/favorites/' + userEmail + '/' + movieId,
+                            type: 'POST',
+                            success: function (response) {
+                                updateFavoriteButton(button, true); // 등록 성공 시 버튼 UI 업데이트
+                            },
+                            error: function (xhr, status, error) {
+                                console.error("좋아요 등록 실패", error);
+                            }
+                        });
+                    }
+                })
+            }
+        });
+
+        // 초기 "좋아요" 상태 설정
+        $('.movie-item-favorite').each(function () {
+            const item = $(this);
+            const movieId = item.find('.movie-id').val();
+
+            // API 호출을 통해 현재 "좋아요" 상태 가져오기
+            $.ajax({
+                url: '/favorites/check/' + userEmail + '/' + movieId,
+                type: 'GET',
+                success: function (response) {
+                    const isFavorited = response.isFavorited;
+                    updateFavoriteButton(item.find('.favorite-btn'), isFavorited); // 상태에 따라 버튼 UI 업데이트
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching current reaction:', status, error);
+                }
+            });
+        });
+
+        function updateFavoriteButton(button, isFavorited) {
+            button.toggleClass('favorited', isFavorited);
+        }
+    });
+</script>

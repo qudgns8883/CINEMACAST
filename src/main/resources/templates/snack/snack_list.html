@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html lang="en"
+      layout:decorate="~{layout/layout_total}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<body class="no-sidebar is-preload">
+<th:block layout:fragment="content">
+    <div id="page-wrapper">
+        <div class="wrapper style1 snack_list list">
+            <div class="container">
+                <article id="main" class="special">
+                    <header>
+                        <h3>스낵 스토어</h3>
+                        <p>
+                            다양한 맛과 풍부한 선택지로 여러분의 입맛을 사로잡을 스낵들을 만나보세요.<br/>
+                            지금 바로 주문하세요!
+                        </p>
+                    </header>
+                </article>
+                <hr/>
+                <div class="row">
+                    <article class="col-3 col-12-mobile special" th:each="snack : ${snackList}"
+                             th:if="${snackList.totalElements > 0}">
+                        <a class="image featured" th:href="@{/snack/detail(id=${snack.id})}">
+                            <!-- locahost:8080/snack/detail?id=1 -->
+                            <img class="featured-img" th:alt="${snack.snack_alt}"
+                                 th:src="@{/images/menu/{image}(image=${snack.snack_image})}"/>
+                        </a>
+                        <header>
+                            <h4><a th:href="@{/snack/detail(id=${snack.id})}" th:text="${snack.snack_nm}"></a></h4>
+                        </header>
+                        <p th:text="${snack.snack_price} + '원'"></p>
+                    </article>
+                </div>
+                <div style="text-align: center;" th:unless="${snackList.totalElements > 0}">
+                    <h4>상품을 준비중 입니다.</h4>
+                </div>
+                <div class="pagination">
+                    <ul style="text-align: center" th:if="${snackList.totalElements > 1}">
+                        <li th:classappend="${snackList.first} ? 'disabled'" th:unless="${snackList.first}">
+                            <a th:href="@{/snack/snackList(page=0)}">처음</a>
+                        </li>
+                        <li th:classappend="${snackList.pageable.pageNumber == 0} ? 'disabled'" th:unless="${snackList.first}">
+                            <a th:href="@{/snack/snackList(page=${snackList.pageable.pageNumber - 1})}">
+                                <img class="movement-btn" src="/images/left-arrow.png" alt="이전페이지" />
+                            </a>
+                        </li>
+                        <li th:classappend="${page == snackList.pageable.pageNumber + 1} ? 'disabled'"
+                            th:each="page : ${#numbers.sequence(startPage, endPage)}">
+                            <a class="page" th:href="@{/snack/snackList(page=${page} - 1)}" th:text="${page}"
+                               th:classappend="${page == snackList.pageable.pageNumber + 1} ? 'current-page'">1</a>
+                        </li>
+                        <li th:classappend="${snackList.pageable.pageNumber + 1 == snackList.totalPages} ? 'disabled'"
+                            th:unless="${snackList.pageable.pageNumber + 1 == snackList.totalPages}">
+                            <a th:href="@{/snack/snackList(page=${snackList.pageable.pageNumber + 1})}">
+                                <img class="movement-btn" src="/images/right-arrow.png" alt="다음페이지" />
+                            </a>
+                        </li>
+                        <li th:classappend="${snackList.last} ? 'disabled'" th:unless="${snackList.pageable.pageNumber + 1 == snackList.totalPages}">
+                            <a th:href="@{/snack/snackList(page=${snackList.totalPages - 1})}">마지막</a>
+                        </li>
+                    </ul>
+                    <ul style="text-align: center" th:if="${snackList.totalElements == 1}">
+                        <li th:classappend="${page == snackList.pageable.pageNumber + 1} ? 'disabled'"
+                            th:each="page : ${#numbers.sequence(startPage, endPage)}">
+                            <a class="page" th:href="@{/snack/snackList(page=${page} - 1)}" th:text="${page}"
+                               th:classappend="${page == snackList.pageable.pageNumber + 1} ? 'current-page'">1</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('.paging_btn').on('click', 'li.disabled a', function(event) {
+                event.preventDefault(); // 기본 이벤트를 방지
+                return false; // 추가적인 이벤트 처리를 방지
+            });
+        });
+    </script>
+</th:block>
+</body>
+</html>

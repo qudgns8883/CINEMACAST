@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat</title>
+    <!-- SockJS 클라이언트 라이브러리 비동기 로드 -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js" async></script>
+
+    <!-- STOMP 클라이언트 라이브러리 비동기 로드 -->
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js" async></script>
+</head>
+<body>
+    <header style="margin-bottom: 3em">
+        <h2>1:1 채팅문의</h2>
+    </header>
+<div id="messages"></div> <!-- 메시지를 보여주는 부분을 버튼 위로 이동 -->
+<div class="container">
+    <div>
+        <div id="categoryButtons">
+            <!-- 카테고리 선택 버튼 -->
+            <button onclick="selectCategory('예매')">예매</button>
+            <button onclick="selectCategory('판매')">판매</button>
+            <button onclick="selectCategory('이벤트')">이벤트</button>
+            <button onclick="selectCategory('기타')">기타</button>
+        </div>
+        <div class="admin-message info-welcome message">
+            <p id="hello">안녕하세요! 시네마캐스트의 1:1 문의 채팅창에 오신 것을 환영합니다.
+                원하시는 카테고리를 선택하고 문의 내용을 입력해주세요.</p>
+        </div>
+    </div>
+    <div class="input-div">
+        <input type="text" id="message" placeholder="문의 유형 선택 후 문의할 내용을 입력해주세요."/>
+        <button onclick="sendMessage()">입력</button>
+    </div>
+    <div id="typingIndicatorDTO" class="admin-status" style="display: none;">상대방이 채팅 중입니다<span id="dots"></span></div> <!-- 타이핑 인디케이터 표시 부분 추가 -->
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    let sender = /*[[${userEmail}]]*/ 'default@example.com'; // Thymeleaf를 통해 서버에서 userEmail을 전달받거나 기본값 설정
+    /*]]>*/
+    let chatRoomId = null;
+    let chatRoomTitle = null;
+    let recipient = null;  // 수신자 이메일을 고정
+    let stompClient = null; // STOMP 클라이언트 변수 선언
+    let typingTimeout = null; //타이핑 타이머
+    let TYPING_DELAY = 3000; // 타이핑 상태 업데이트를 위한 딜레이 시간 (3초)
+    let typingIndicatorSent = false; // 타이핑 상태가 이미 전송되었는지 여부를 저장하는 변수
+    let status = null; //채팅방 상태
+    let entranceStatus  = ""; //관리자의 입장상태
+
+    // 초기 페이징 값 설정
+    let activePage = 1;
+    let inactivePage = 1;
+
+    // WebSocket 연결 함수
+    function connect() {
+        var socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            // 타이핑 이벤트를 감지하여 서버로 전송
+            document.getElementById('message').addEventListener('input', handleTypingEvent);
+            sendAdminEnter();
+            // 특정 사용자 큐에 구독 (개인 메시지 수신)
+            stompClient.subscribe('/user/queue/private/' + chatRoomId, function (message) {
+                var parsedMessage = JSON.parse(message.body);
+
+                handleMessage(parsedMessage);
+            })
+            // 전체 메시지를 받기 위해 토픽 구독
+            stompClient.subscribe('/Topic/paging', function (message) {
+                var parsedMessage = JSON.parse(message.body);
+
+                // 메시지 받을 때마다 페이징 값 업데이트
+                activePage = parsedMessage.activePage;
+                inactivePage = parsedMessage.inactivePage;
+
+                handleMessage(parsedMessage);
+            });
+        });
+    }
+
+    // 관리자가 채팅방에 입장했다는 알림을 전송
+    function sendAdminExit() {
+        const EnterNotification = {
+            sender: sender,
+            chatRoomId: chatRoomId,
+            recipient: recipient,
+            type: 'false'
+        };
+        stompClient.send("/app/chat/admin/exit", {}, JSON.stringify(EnterNotification));
+    }
+
+    // 관리자가 채팅방에 입장했다는 알림을 전송
+    function sendAdminEnter() {
+        const EnterNotification = {
+            sender: sender,
+            chatRoomId: chatRoomId,
+            recipient: recipient,
+            type: 'true'
+        };
+        stompClient.send("/app/chat/admin/enter", {}, JSON.stringify(EnterNotification));
+    }
+
+    // 메시지 타입에 따른 처리
+    function handleMessage(parsedMessage) {
+
+        //채팅종료 시
+        if (parsedMessage.status === 'inactive') {
+            entranceStatus = parsedMessage.type;
+            showMessage(parsedMessage.content);
+            showMessage('다른 문의가 있으면 카테고리를 선택해주세요.');
+            updateCategoryButtonsDisplay('block');
+            //일반 메세지
+        } else if (parsedMessage.status === 'active') {
+            showMessage('관리자 : ' + parsedMessage.content);
+            //타이핑 중이면
+        } else if (parsedMessage.typing === "typing") {
+            updateTypingIndicatorDisplay('block');
+            //타이핑 안할 때
+        } else if (parsedMessage.typing === "not_typing") {
+            updateTypingIndicatorDisplay('none');
+        } else {
+            entranceStatus = parsedMessage.type;
+        }
+    }
+
+    //카테고리 활성화
+    function updateCategoryButtonsDisplay(displayStyle) {
+        document.getElementById('categoryButtons').style.display = displayStyle;
+    }
+
+    //입력창 활성화
+    function updateTypingIndicatorDisplay(displayStyle) {
+        document.getElementById('typingIndicatorDTO').style.display = displayStyle;
+    }
+
+    // 타이핑 이벤트를 처리하는 함수
+    function handleTypingEvent() {
+        // 처음 입력 시 타이핑 상태 전송
+        if (!typingIndicatorSent) {
+            const type = "typing";
+            sendTypingIndicator(type);
+            typingIndicatorSent = true;
+        }
+        // 기존 타이머 제거
+        clearTimeout(typingTimeout);
+
+        typingTimeout = setTimeout(function () {
+
+            const type = "not_typing";
+            sendTypingIndicator(type); // 사용자가 일정 시간 입력을 멈추면 타이핑 상태 전송
+            typingIndicatorSent = false; // 타이핑 상태 초기화
+        }, TYPING_DELAY);
+    }
+
+    // 타이핑 인디케이터를 서버로 전송하는 함수
+    function sendTypingIndicator(type) {
+        var typingIndicatorDTO = {
+            chatRoomId: chatRoomId,
+            sender: sender,
+            recipient: recipient,
+            typing: type,
+        };
+        stompClient.send("/app/chat/typing", {}, JSON.stringify(typingIndicatorDTO));
+    }
+
+    // 메시지 전송 함수
+    function sendMessage() {
+        var messageContent = document.getElementById('message').value;
+
+        // 메시지 내용이 없으면 함수 종료
+        if (!messageContent) return;
+
+        var message = {
+            chatRoomId: chatRoomId,
+            sender: sender,
+            recipient: recipient,
+            content: messageContent,
+            chatRoomTitle: chatRoomTitle,
+            status: "active",
+            type: entranceStatus,
+            paging: {
+                activePage: activePage,
+                inactivePage: inactivePage
+            }
+        };
+
+        stompClient.send("/app/chat/private", {}, JSON.stringify(message)); // STOMP를 통해 서버로 메시지 전송
+        showMessage('나 : ' + messageContent); // 전송한 메시지를 화면에 표시
+        document.getElementById('message').value = ''; // 입력 필드를 비움
+
+        const timestamp = new Date().getTime();
+        localStorage.setItem(`lastReadTimestamp_${chatRoomId.toString()}`, timestamp.toString());
+
+        // 메시지 전송 후 타이핑 상태 초기화
+        clearTimeout(typingTimeout);
+        typingIndicatorSent = false;
+    }
+
+    // Enter 키 입력 시 메시지 전송
+    document.getElementById("message").addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault(); // Enter 키의 기본 동작(새 줄 추가)을 막음
+            sendMessage(); // sendMessage 함수 호출
+        }
+    });
+
+    //메세지 표현
+    function showMessage(message) {
+        var messages = document.getElementById('messages');
+        var messageElementDiv = document.createElement('div');
+        var messageElement = document.createElement('p');
+
+        // 메시지가 '관리자 :'로 시작하면 관리자 메시지로 처리
+        if (message.startsWith('관리자 :')) {
+            messageElement.textContent = message.substring(6).trim(); // '관리자 :' 부분을 제외한 실제 메시지
+            messageElementDiv.classList.add('admin-message');
+        } else if (message.startsWith('나 :')) {
+            messageElement.textContent = message.substring(4).trim(); // '나 :' 부분을 제외한 실제 메시지
+            messageElementDiv.classList.add('user-message');
+        } else if (message.startsWith('이전')) {
+            messageElement.textContent = message;
+            messageElementDiv.classList.add('info-status');
+        } else {
+            messageElement.textContent = message;
+            messageElementDiv.classList.add('admin-message');
+        }
+
+        messageElementDiv.appendChild(messageElement);
+        messageElementDiv.classList.add('message');
+
+        messages.appendChild(messageElementDiv);
+        document.getElementById('typingIndicatorDTO').style.display = 'none';
+    }
+
+    //카테고리를 선택한 후
+    function selectCategory(category) {
+
+        var messages = document.getElementById('messages');
+        // messages 요소의 자식 노드를 모두 제거
+        while (messages.firstChild) {
+            messages.removeChild(messages.firstChild);
+        }
+
+        chatRoomTitle = category;
+        showMessage('문의사항을 남겨주시면 신속히 답변해드리겠습니다.');
+
+        // 카테고리 버튼 숨기기
+        document.getElementById('categoryButtons').style.display = 'none';
+        var elements = document.getElementsByClassName('info-welcome');
+        if (elements.length > 0) {
+            elements[0].style.display = 'none';
+        }
+        //카테고리 별 수신자 이메일 설정
+        switch (category) {
+            case '예매':
+                recipient = '1@admin.com';
+                break;
+            case '판매':
+                recipient = '2@admin.com';
+                break;
+            case '이벤트':
+                recipient = '3@admin.com';
+                break;
+            case '기타':
+                recipient = '4@admin.com';
+                break;
+            default:
+                recipient = 'admin@admin.com';
+        }
+        createChatRoomAndConnect(recipient, category);
+        const input = document.getElementById('message');
+        input.setAttribute('placeholder', '입력하세요.');
+    }
+
+    //관리자이메일과 카테고리로 채팅방 생성
+    function createChatRoomAndConnect(recipient, category) {
+        // 채팅방 생성 및 연결 요청
+        fetch('/chat/createChatRoom', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({adminEmail: recipient, userEmail: sender, chatRoomTitle: category})
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                chatRoomId = data.chatRoomId;
+                // 채팅방 생성 후 연결
+                connect();
+            })
+            .catch(error => console.error('Error creating chat room:', error));
+    }
+
+    //유저이메일로 현재 채팅중인 관리자 이메일 찾기
+    async function fetchRecipientEmail() {
+        try {
+            const response = await fetch('/chat/getRecipientEmail');
+            const data = await response.json(); // JSON 형식으로 응답을
+            return Array.isArray(data) ? data[0] : data || '이메일을 찾을 수 없습니다.';
+        } catch (error) {
+            return '오류 발생';
+        }
+    }
+
+    //관리자 이메일로 채팅중인 채팅룸반환
+    async function fetchMessages(recipient) {
+        try {
+            const response = await fetch(`/chat/active/${recipient}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            var elements = document.getElementsByClassName('info-welcome');
+            for (var i = 0; i < elements.length; i++) {
+                elements[i].style.display = 'none';
+            }
+            const data = await response.json();
+            let messageExist = false;
+            let unreadMessageFlag = false;
+            chatRoomId = data[0].id;
+
+            // 각 메시지 객체를 순회
+            data.forEach(item => {
+                let lastReadTimestamp = parseInt(localStorage.getItem(`lastReadTimestamp_${chatRoomId}`), 10) || 0;
+
+                if (Array.isArray(item.messages) && item.messages.length > 0) {
+                    messageExist = true;
+                    item.messages.forEach(message => {
+                        recipient = message.sender;
+                        chatRoomTitle = message.chatRoomTitle;
+                        document.getElementById('categoryButtons').style.display = 'none';
+
+                        let displayMessage = message.sender === sender ? `나 : ${message.content}` : `관리자 : ${message.content}`;
+                        showMessage(displayMessage);
+
+                        let messageTimestamp = new Date(message.createAt).getTime();
+
+                        if (messageTimestamp > lastReadTimestamp && !unreadMessageFlag && messageExist) {
+                            showMessage('이전 메시지');
+                            unreadMessageFlag = true;
+                        }
+                    });
+                }
+            });
+
+            // 메시지가 없을 경우에만 카테고리 메시지를 표시
+            if (chatRoomTitle === '상담이 완료되었습니다.') {
+                document.getElementById('categoryButtons').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+        }
+    }
+    window.addEventListener('unload', function() {
+        if (stompClient !== null) {
+            sendAdminExit(); // 관리자가 채팅방에서 나갔음을 서버에 알림
+            stompClient.disconnect(); // WebSocket 연결 해제
+        }
+    });
+
+    function fetchChatRoomPresence(chatRoomId) {
+        fetch('/chatRoomPresence?chatRoomId=' + chatRoomId)
+            .then(response => response.json())
+            .then(data => {
+
+                entranceStatus = data[recipient] || false;
+            })
+            .catch(error => console.error('Error fetching admin presence:', error));
+    }
+</script>
+<script type="module">
+    import {connectWebSocket, updateUnreadCount} from '/modules/chatModule.js';
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // WebSocket 연결 설정
+        setupWebSocketConnection();
+    });
+
+    //웹소켓 옵션
+    function setupWebSocketConnection() {
+        const options = {
+            subscribeCallback: handleWebSocketMessage
+        };
+
+        // WebSocket 연결 함수 호출
+        connectWebSocket(options);
+    }
+
+    //안읽은 메세지수 업데이트
+    function handleWebSocketMessage(response) {
+        updateUnreadCount(response);
+    }
+
+    // 점을 추가하고 제거하는 함수
+    function animateDots() {
+        var dotsContainer = document.getElementById('dots');
+        var maxDots = 3;
+        var dotInterval = 500; // 점이 나타나는 시간 간격
+        var dotLifetime = 1500; // 점이 화면에 유지되는 시간
+
+        function addDot() {
+            var dot = document.createElement('span');
+            dot.className = 'dot';
+            dotsContainer.appendChild(dot);
+
+            setTimeout(function() {
+                dotsContainer.removeChild(dot);
+            }, dotLifetime);
+        }
+
+        var dotCount = 0;
+        var dotTimer = setInterval(function() {
+            if (dotCount < maxDots) {
+                addDot();
+                dotCount++;
+            } else {
+                clearInterval(dotTimer);
+            }
+        }, dotInterval);
+    }
+
+    setInterval(animateDots, 3000); // 점 애니메이션을 반복하는 시간 간격
+</script>
+</body>
+</html>

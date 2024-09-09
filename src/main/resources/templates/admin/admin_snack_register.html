@@ -1,0 +1,93 @@
+<nav class="layout-navbar navbar navbar-expand-xl align-items-center bg-navbar-theme" id="layout-navbar" style="margin-bottom: 10px;">
+    <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+        <!-- Search -->
+        <div class="navbar-nav align-items-center">
+            <div class="nav-item d-flex align-items-center">
+                <i class="bx bx-search fs-4 lh-0"></i>
+                <h4>스낵 스토어 상품 등록하기</h4>
+            </div>
+        </div>
+        <!-- /Search -->
+    </div>
+</nav>
+<!-- / Navbar -->
+<!-- Basic Layout -->
+<div class="row">
+    <div class="col-xl">
+        <div class="card mb-4">
+            <div class="card-body">
+                <form id="snackRegisterForm" action="/admin/snackRegister" method="post">
+                    <div class="mb-3">
+                        <label class="form-label" for="snack_name">상품명</label>
+                        <input class="form-control" id="snack_name" name="snack_nm" placeholder="상품명을 입력해주세요."
+                               required type="text"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="snack_price">가격</label>
+                        <input class="form-control" id="snack_price" name="snack_price" placeholder="상품 가격을 입력해주세요. ex) 10000"
+                               required type="text"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="snack_stock">구성품(세트)</label>
+                        <input class="form-control" id="snack_set" name="snack_set"
+                               placeholder="구성품을 입력해주세요. ex) 팝콘, 콜라" type="text"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="snack_stock">수량</label>
+                        <input class="form-control" id="snack_stock" name="snack_stock" placeholder="상품 수량을 입력해주세요. ex) 100"
+                               required type="text"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="basic-default-message">상품 상세 설명</label>
+                        <textarea
+                                class="form-control"
+                                id="basic-default-message"
+                                name="snack_detail"
+                                placeholder="상품 상세 설명을 입력해주세요." required
+                        ></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="snack_image">이미지 이름</label>
+                        <input class="form-control" id="snack_image" name="snack_image"
+                               placeholder="상품 이미지명을 입력해주세요. ex) menu1.png" required type="text"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="snack_alt">이미지 alt 설명</label>
+                        <input class="form-control" id="snack_alt" name="snack_alt" placeholder="상품 이미지 alt 설명을 입력해주세요."
+                               required type="text"/>
+                    </div>
+                    <button class="btn btn-primary" type="submit">등록하기</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--sweetalert 사용 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script src="/personal-scripts/util.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#snackRegisterForm').on('submit', function (e) {
+            e.preventDefault(); // 폼 기본 제출 동작 막기
+
+            var form = $(this);
+            var formData = form.serialize();
+
+            $.ajax({
+                type: 'POST',
+                url: form.attr('action'),
+                data: formData,
+                success: function (response) {
+                    swtAlertOne2("스낵 등록 완료")
+                    $('.container-xxl').html(response); // 응답 HTML을 특정 컨테이너에 삽입
+                },
+                error: function (xhr) {
+                    Swal.fire('Error', 'There was an error processing your request.', 'error');
+                }
+            });
+        });
+    });
+</script>

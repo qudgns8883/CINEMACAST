@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{layout/layout_movie_get}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<body class="right-sidebar is-preload">
+<th:block layout:fragment="content">
+    <div id="page-wrapper">
+        <div class="wrapper style1 movie_get">
+            <div class="container" th:each="movie, iterStat : ${movieInfos}">
+                <input type="hidden" id="movieId" th:value="${movie.id}">
+                <div class="row">
+                    <div class="col-12-mobile" id="content">
+                        <article id="main">
+                            <div class="movie_info_background">
+                                <header id="get_info">
+                                    <a href="#" class="image featured" onclick="toggleOverlay(this)">
+                                        <img th:if="${#strings.length(movie.id) == 10}"
+                                             th:src="@{|/${movie.posterPath}|}"
+                                             class="featured-img"
+                                             alt="영화포스터"
+                                        />
+                                        <img th:if="${movie.posterPath != 'null' && movie.posterPath != '' && #strings.length(movie.id) != 10}"
+                                             class="featured-img" id="resizedImageUrl"
+                                             th:src="@{'https://image.tmdb.org/t/p/w500' + ${movie.posterPath}}"
+                                             alt="영화포스터"
+                                        />
+                                        <img th:if="${movie.posterPath == null || movie.posterPath == '' || movie.posterPath == 'null'}"
+                                             class="featured-img"
+                                             th:src="@{/images/img_not_ready2.png}"
+                                             alt="준비중 이미지"
+                                        />
+                                        <div class="movie-overlay">
+                                            <img th:if="${#strings.length(movie.id) == 10}"
+                                                 src="/images/magnifier2.png"
+                                                 onclick="openModal(this.getAttribute('src'))"
+                                                 alt="돋보기"/>
+                                            <img th:if="${movie.posterPath != 'null' && movie.posterPath != '' && #strings.length(movie.id) != 10}"
+                                                 src="/images/magnifier2.png"
+                                                 th:onclick="'openModal(\'' + @{'https://image.tmdb.org/t/p/original' + ${movie.posterPath}} + '\')'"
+                                                 alt="돋보기"/>
+                                            <img src="/images/play.png" id="videoModalBtn"
+                                                 th:data-video-id="${movie.video}" href="#"
+                                                 class="video_btn" alt="트레일러 재생"/>
+                                        </div>
+                                    </a>
+
+                                    <div class="movie_info">
+                                        <span class="genres" th:text="${#strings.arrayJoin(movie.genres, ', ')}"></span>
+                                        <header class="info_header">
+                                            <div class="movie-title-box">
+                                                <h3 th:text="${movie.title}" class="movie_title"></h3>
+                                            </div>
+                                            <div class="button_box">
+                                                <div class="favorite-container">
+                                                    <img id="favoriteButton" class="fav-icon"
+                                                         src="/images/heart%20icon.png" alt="찜하기(좋아요)">
+                                                </div>
+                                                <div class="btn_box">
+                                                    <img onclick="shareMessage()" src="/images/share.png"
+                                                         alt="카카오톡 공유" id="kakao_btn" class="kakao_btn"/>
+                                                </div>
+                                            </div>
+                                        </header>
+
+                                        <br>
+                                        <div class="movie_detail">
+                                            <span class="releaseDate"><b th:text="${movie.releaseDate}">releasedate</b></span>
+                                            <span class="runtime"><b th:text="${movie.runtime} + '분'">runtime</b></span>
+                                            <img id="certification-image" src="" alt="영화심의등급 이미지">
+                                            <span id="certification">
+                                                <b id="certificationB"
+                                                   th:text="${movie.certifications}">certification</b>
+                                            </span>
+                                            <span>
+                                                <b class="movie_data_averageRating"></b>
+                                            </span>
+                                        </div>
+                                        <p th:text="${movie.overview}">
+                                            ~ overview ~
+                                        </p>
+                                        <div class="button_box">
+                                            <button class="reservation_btn"><a
+                                                    th:href="@{'/reservation/screeningSchedule/' + ${movieId}}">예매하기</a>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </header>
+                            </div>
+                            <div class="cast">
+                                <h4>출연진</h4>
+                                <div id="cast-members">
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+
+                <section class="movie_etc">
+                    <div class="etc_btn">
+                        <button type="button" class="button stillcut_btn clicked">스틸컷</button>
+                        <!-- 수정 컨펌 필요 -->
+                        <button type="button" class="button reviews_btn"></button>
+                    </div>
+                </section>
+
+                <!-- 비디오 트레일러 모달 -->
+                <div id="videoModal" class="modal">
+                    <div class="video-modal-content">
+                        <span class="close">&times;</span>
+                        <iframe id="videoFrame"
+                                width="560"
+                                height="315"
+                                src="" frameborder="0"
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+
+                <!-- 스틸컷 for each (반복) -->
+                <!-- movieId가 10자리일경우 == 관리자가 직접 등록한 영화 -->
+                <!-- movieId가 10자리가 아닐경우 == API에서 받아온 영화 -->
+                <div id="still-cut" th:each="movie, iterStat : ${movieInfos}">
+                    <div class="row">
+                        <div th:each="stillCutPath, iterStat : ${movie.stillCutPaths}"
+                             th:classappend="${iterStat.count > 6} ? 'hide still-cut' : 'still-cut'"
+                             class="col-4 col-12-mobile special">
+                            <article class="still-cut-article">
+                                <a href="#" class="image featured">
+                                    <img th:if="${#strings.length(movie.id) == 10}"
+                                         th:src="@{|/${stillCutPath}|}" alt="스틸컷"
+                                         onclick="openModal(this.getAttribute('src'))"
+                                    />
+                                    <img th:unless="${#strings.length(movie.id) == 10}"
+                                         th:src="@{'https://image.tmdb.org/t/p/original/' + ${stillCutPath}}" alt="스틸컷"
+                                         onclick="openModal(this.getAttribute('src'))"
+                                    />
+                                </a>
+                            </article>
+                        </div>
+                    </div>
+                    <p id="showMore" class="cursor">
+                        <a>
+                            <img class="more_btn"
+                                 src="/images/under-arrow.png"
+                                 alt="더보기"/>
+                        </a>
+                    </p>
+                    <p id="showLess" class="cursor" style="display: none;">
+                        <a>접기</a>
+                    </p>
+                </div>
+                <!-- 리액션 관련 div -->
+                <div id="reviews" style="display: none">
+                    <header>
+                        <div class="reaction-container">
+                            <div class="reaction-item">
+                                <img id="likeButton" src="/images/like.png" alt="재밌어요"
+                                     onclick="react('LIKE')">
+                                <span class="count like-count">0</span>
+                            </div>
+                            <div class="reaction-item">
+                                <img id="dislikeButton" src="/images/dislike.png" alt="재미없어요"
+                                     onclick="react('DISLIKE')">
+                                <span class="count dislike-count">0</span>
+                            </div>
+                            <div class="reaction-item">
+                                <img id="sadButton" src="/images/sad.png" alt="슬퍼요"
+                                     onclick="react('SAD')">
+                                <span class="count sad-count">0</span>
+                            </div>
+                            <div class="reaction-item">
+                                <img id="funnyButton" src="/images/funny.png" alt="웃겨요"
+                                     onclick="react('FUNNY')">
+                                <span class="count funny-count">0</span>
+                            </div>
+                            <div class="reaction-item">
+                                <img id="scaryButton" src="/images/scary.png" alt="무서워요"
+                                     onclick="react('SCARY')">
+                                <span class="count scary-count">0</span>
+                            </div>
+                        </div>
+                        <button onclick="openReviewModal()" class="modal_open">관람평 작성하기</button>
+                    </header>
+                    <div class="row">
+                        <table class="default" id="reviews-table">
+                            <!-- 댓글이 여기에 추가될 것입니다 -->
+                        </table>
+                    </div>
+                    <p id="showMore_review" class="cursor">
+                        <a>
+                            <img class="more_btn"
+                                 src="/images/under-arrow.png"
+                                 alt="더보기"/>
+                        </a>
+                    </p>
+                    <p id="showLess_review" class="cursor" style="display: none;">
+                        <a>접기</a>
+                    </p>
+                </div>
+                <!-- 이미지 상세보기 모달 -->
+                <div id="myModal" class="modal">
+                    <span class="close" onclick="closeModal()">&times;</span>
+                    <img class="modal-content" id="modalImage">
+                </div>
+                <!-- 안읽은 메세지 표시 -->
+                <div class="fixed-bottom-right" id="unreadMessages" onclick="redirectToChatRoom()">
+                    <img src="/images/funny.png" alt="Unread Messages"> <!-- 안 읽은 메세지 아이콘 이미지 경로에 맞게 수정 -->
+                    <!-- 안 읽은 메시지 수를 표시할 요소 -->
+                    <span id="unreadCount">0</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/js/jquery.min.js"></script>
+
+    <!--              댓글         ------------------             -->
+    <!--스윗얼럿 모듈-->
+    <script type="module" src="/modules/alerts.js"></script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            var featuredImages = document.querySelectorAll('.image.featured');
+
+            featuredImages.forEach(function (image) {
+                image.addEventListener('mouseenter', function () {
+                    toggleOverlay(this, true);
+                });
+
+                image.addEventListener('mouseleave', function () {
+                    toggleOverlay(this, false);
+                });
+            });
+
+            function toggleOverlay(element, show) {
+                var overlay = element.querySelector('.movie-overlay');
+                if (show) {
+                    overlay.style.display = 'block';
+                    overlay.style.display = 'flex';
+                    overlay.style.flexDirection = 'row';
+                    overlay.style.justifyContent = 'center';
+                    overlay.style.alignItems = 'center';
+                } else {
+                    overlay.style.display = 'none';
+                }
+            }
+        });
+
+        const movieId = $('#movieId').val();
+
+        // credits api 제작진 사진
+        const options = {
+            method: 'GET',
+            headers: {
+                accept: 'application/json',
+                Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3N2UzMWU5NWVjZmE3ZjBlODY5YTE3NmQwMjU0YWQwMiIsInN1YiI6IjY2NDJiMWM1ZTJlZjM4N2Y1MjM1OTNjZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.hBVsW7eVrC2M3FdWc2OJEAWq0h4v-NiiM2YEDQoy7OU'
+            }
+        };
+
+        // API에서 영화 출연진들을 받아와서 뿌려주는 함수
+        // movieId가 10자리일경우 api에서 받아올수없기때문에 함수 자체를 종료
+        async function fetchMovieCredits(movieId) {
+
+            if (movieId.length === 10) {
+                return;
+            }
+
+            try {
+                const apiKey = '547e2cd4d0e26e68fb907dafef4f90ac';
+                const url = `https://api.themoviedb.org/3/movie/${movieId}/credits?language=ko-KR&api_key=${apiKey}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                // 영화 정보를 담을 요소 생성
+                const castMembersDiv = document.getElementById('cast-members');
+                castMembersDiv.style.display = 'flex'; // Flexbox 레이아웃 적용
+                castMembersDiv.style.flexWrap = 'wrap'; // 요소들이 넘치면 다음 줄로 넘김
+
+                // 영화 관람 등급
+                const certificationElement = document.getElementById('certification');
+                const certificationBElement = document.getElementById('certificationB');
+                const certificationValue = certificationElement.textContent;
+                const imgElement = document.getElementById('certification-image');
+
+                switch (certificationValue) {
+                    case '12세 이상 관람가':
+                        imgElement.src = '/images/ratings/12.png';
+                        certificationBElement.style.color = '#EFC53C';
+                        break;
+                    case '15세 이상 관람가':
+                        imgElement.src = '/images/ratings/15.png';
+                        certificationBElement.style.color = '#D98E04';
+                        break;
+                    case '18세 이상 관람가':
+                        imgElement.src = '/images/ratings/18.png';
+                        certificationBElement.style.color = '#FF0000';
+                        break;
+                    case '19':
+                        certificationElement.textContent = '청소년 관람불가';
+                        imgElement.src = '/images/ratings/18.png';
+                        certificationBElement.style.color = '#FF0000';
+                        break;
+                    default:
+                        imgElement.src = '/images/ratings/all.svg';
+                        certificationBElement.style.color = '#237042';
+                }
+
+                // 감독 정보 출력 (이미지 포함)
+                const director = data.crew.find(person => person.job === 'Director');
+                if (director) {
+                    const directorDiv = createPersonDiv(director.name, director.profile_path, true);
+                    castMembersDiv.appendChild(directorDiv); // directorDiv를 movieInfoDiv에 추가
+                }
+
+                // 출연진 정보 출력 (이미지 포함)
+                data.cast.slice(0, 5).forEach(cast => {
+                    const castDiv = createPersonDiv(cast.name, cast.profile_path);
+                    castMembersDiv.appendChild(castDiv); // castDiv를 movieInfoDiv에 추가
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        fetchMovieCredits(movieId);
+
+        // 인물 정보와 이미지를 담은 div 생성 함수
+        function createPersonDiv(name, profilePath, isDirector = false) {
+            const personDiv = document.createElement('div'); // 새로운 div 생성
+            personDiv.style.marginRight = '13px'; // 간격 설정
+            personDiv.style.width = '7em';
+            personDiv.style.height = 'auto';
+
+            const p = document.createElement('p');
+            p.innerHTML = isDirector ? `<p>감독 : ${name}</p>` : `<p>${name}</p>`;
+            p.style.fontSize = '0.8em'; // 글자 크기 작게 설정
+            p.style.textAlign = 'center';
+
+            const img = document.createElement('img');
+            img.src = profilePath ? `https://image.tmdb.org/t/p/w200${profilePath}` : '/images/img_not_ready2.png';
+            img.alt = `${name}'s profile image`;
+            img.setAttribute('style', 'width: 100%; height: auto; border-radius: 10px;');
+
+            personDiv.appendChild(img);
+            personDiv.appendChild(p);
+
+            return personDiv;
+        }
+
+        const api = {
+            method: 'GET',
+            headers: {
+                accept: 'application/json',
+                Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3N2UzMWU5NWVjZmE3ZjBlODY5YTE3NmQwMjU0YWQwMiIsInN1YiI6IjY2NDJiMWM1ZTJlZjM4N2Y1MjM1OTNjZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.hBVsW7eVrC2M3FdWc2OJEAWq0h4v-NiiM2YEDQoy7OU'
+            }
+        };
+
+        // 스틸컷 더보기(more), 접기 클릭 함수
+        // 현재 표시된 항목의 수를 추적하는 변수
+        let visibleCount = 6; // 처음에 보이는 항목 수
+        const increment = 8; // 한 번에 표시할 추가 항목 수
+
+        // 스틸컷이 있는지 확인하는 함수
+        function hasStillCuts() {
+            const stillCuts = document.querySelectorAll(".still-cut");
+            return stillCuts.length > 0;
+        }
+
+        // 초기에 "더보기" 버튼의 표시 여부를 결정
+        if (!hasStillCuts()) {
+            document.getElementById("showMore").style.display = 'none';
+        } else {
+            document.getElementById("showMore").style.display = 'block';
+        }
+
+        // 더보기 버튼
+        document.getElementById("showMore").addEventListener("click", function () {
+            const stillCuts = document.querySelectorAll(".still-cut");
+            const newVisibleCount = Math.min(visibleCount + increment, stillCuts.length);
+
+            for (var i = visibleCount; i < newVisibleCount; i++) {
+                stillCuts[i].classList.remove("hide");
+            }
+            visibleCount = newVisibleCount; // 업데이트된 표시된 항목의 수
+
+            // "접기" 버튼을 항상 보여줌
+            document.getElementById("showLess").style.display = 'block';
+
+            // 모든 항목이 표시되었는지 확인
+            if (visibleCount >= stillCuts.length) {
+                // "더보기"를 숨김
+                this.style.display = 'none';
+            } else {
+                // 아직 표시되지 않은 항목이 있다면 "더보기"를 계속 보여줌
+                this.style.display = 'block';
+            }
+        });
+
+        // 접기 버튼
+        document.getElementById("showLess").addEventListener("click", function () {
+            var stillCuts = document.querySelectorAll(".still-cut");
+            for (var i = 0; i < stillCuts.length; i++) {
+                if (i > 5) { // 처음 6개를 제외한 나머지를 숨깁니다.
+                    stillCuts[i].classList.add("hide");
+                }
+            }
+            visibleCount = 4; // "접기" 후 처음 표시된 항목의 수로 리셋
+            this.style.display = 'none'; // "접기"를 숨깁니다.
+            document.getElementById("showMore").style.display = 'block'; // "더보기"가 다시 보여질 상황을 위해
+        });
+
+        // 이미지 클릭시 원본크기로 볼수있게 띄우는 모달 관련 변수 및 함수들
+        var currentScrollPosition = 0;
+
+        function openModal(imageSrc) {
+            var header = document.getElementById("header")
+            header.style.display = "hide"
+            currentScrollPosition = window.scrollY;
+            document.body.style.overflow = 'hide';
+            var modal = document.getElementById("myModal");
+            var modalImg = document.getElementById("modalImage");
+            modal.style.display = "block";
+            modalImg.src = imageSrc;
+        }
+
+        function closeModal() {
+            var header = document.getElementById("header");
+            header.style.display = '';
+            var modal = document.getElementById("myModal");
+            modal.style.display = "none";
+            document.body.style.overflow = '';
+            // 자꾸 모달 닫을때 포스터 이미지 크기가 바뀌어서
+            // 걍 모달 함수에서 닫을때 포스터이미지 크기를 강제로 설정해서 크기변동이 없는것처럼 보이게함.
+            document.querySelector('.image.featured img').style.width = '350px';
+            document.querySelector('.image.featured img').style.height = '480px';
+            window.scrollTo(0, currentScrollPosition);
+        }
+
+
+        /* 유튜브 트레일러 관련 모달 시작 */
+        document.addEventListener('DOMContentLoaded', function () {
+            var openModalButton = document.getElementById('videoModalBtn');
+            if (openModalButton) {
+                openModalButton.addEventListener('click', function () {
+                    var modal = document.getElementById('videoModal');
+                    var videoId = openModalButton.getAttribute('data-video-id');
+                    var videoFrame = document.getElementById('videoFrame');
+
+                    var preparingImage = videoFrame.parentNode.querySelector('img');
+                    if (preparingImage) {
+                        preparingImage.remove();
+                    }
+
+                    if (videoId == null) {
+                        // 비디오 ID가 없는 경우, 준비중 이미지 표시
+                        videoFrame.style.display = 'none';
+                        var preparingImage = document.createElement('img');
+                        preparingImage.src = '/images/video_not_ready.jpg'; // 준비중 이미지 URL
+                        preparingImage.style.width = '100%';
+                        preparingImage.style.height = '100%';
+                        videoFrame.parentNode.appendChild(preparingImage);
+                    } else {
+                        // 비디오 ID가 있는 경우, 비디오 표시
+                        var videoUrl = 'https://www.youtube.com/embed/' + videoId;
+                        videoFrame.src = videoUrl;
+                        videoFrame.style.display = 'block';
+                    }
+
+                    modal.style.display = "flex"; // flex로 변경
+                    document.body.style.overflow = 'hide'; // 스크롤 막기
+                });
+
+                document.getElementsByClassName('close')[0].addEventListener('click', function () {
+                    var modal = document.getElementById('videoModal');
+                    modal.style.display = "none";
+                    document.getElementById('videoFrame').src = ""; // 비디오 중지
+                    document.body.style.overflow = ''; // 스크롤 복원
+                });
+            }
+        });
+
+        /* 유튜브 트레일러 관련 모달 끝 */
+
+        // 버튼 클릭 시 스틸컷 또는 리뷰 테이블
+        document.addEventListener('DOMContentLoaded', function () {
+
+            var stillCutBtn = document.querySelector(".stillcut_btn");
+            var reviewsBtn = document.querySelector(".reviews_btn");
+            var stillCutDiv = document.getElementById("still-cut");
+            var reviewsDiv = document.getElementById("reviews");
+
+            stillCutBtn.addEventListener("click", function () {
+                stillCutDiv.style.display = "block";
+                reviewsDiv.style.display = "none";
+                stillCutBtn.classList.add("clicked");
+                reviewsBtn.classList.remove("clicked");
+            });
+
+            reviewsBtn.addEventListener("click", function () {
+                stillCutDiv.style.display = "none";
+                reviewsDiv.style.display = "block";
+                reviewsBtn.classList.add("clicked");
+                stillCutBtn.classList.remove("clicked");
+            });
+        });
+
+        // 리뷰 작성 모달을 팝업 창으로 열기
+        function openReviewModal() {
+            // 댓글 작성 여부 확인
+            $.ajax({
+                url: `/movies/hasCommented/${movieId}`,
+                method: 'GET',
+                dataType: 'json',
+                success: function (hasCommented, textStatus, xhr) {
+
+                    if (hasCommented) {
+                        Swal.fire({
+                            position: "center",
+                            icon: "info",
+                            title: "이미 댓글을 작성하셨습니다.",
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    } else {
+                        var reviewWindow = window.open('/review/' + movieId, 'ReviewModal', 'width=600,height=400');
+                        var checkWindowClosed = setInterval(function () {
+                            if (reviewWindow.closed) {
+                                clearInterval(checkWindowClosed);
+                                loadComments();
+                            }
+                        }, 500); // 0.5초마다 상태 확인
+                    }
+                },
+                error: function (xhr, status, error) {
+                    if (xhr.status === 401) {
+                        Swal.fire({
+                            position: "center",
+                            icon: "warning",
+                            title: "로그인이 필요합니다.",
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    } else {
+                        console.error("댓글 작성 여부를 확인하는 중 오류가 발생했습니다:", error);
+                    }
+                }
+            });
+        }
+
+        // 부모 창에서 댓글 등록 이벤트 수신
+        window.addEventListener('commentRegistered', function (event) {
+            if (event.detail.success) {
+                // 댓글이 성공적으로 등록되었음을 사용자에게 알림
+                Swal.fire({
+                    position: "center",
+                    icon: "success",
+                    title: "댓글이 등록되었습니다.",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                // 필요한 후처리 작업 수행 (예: 댓글 목록 업데이트)
+                loadComments();
+            } else {
+                // 댓글 등록 실패 처리
+                console.error("댓글 등록에 실패했습니다.");
+                // 사용자에게 알림 등 추가적인 오류 처리 가능
+            }
+        });
+
+        //            댓글리스트    --------------------------------------------------
+        const loadComments = () => {
+
+            const emojiMap = {
+                1: '😡',
+                2: '😠',
+                3: '😐',
+                4: '😊',
+                5: '😍'
+            };
+
+            $.ajax({
+                url: `/movies/` + movieId,
+                method: 'GET',
+                dataType: 'json',
+                success: (data) => {
+
+                    let currentCommentIndex = 0;
+                    const maxCommentDisplay = 3;
+                    const remainingCommentCount = data.comments.length - currentCommentIndex;
+
+                    //평점
+                    const movieDataSection = $('.movie_data_averageRating');
+                    movieDataSection.text(`${data.averageRating !== null ? data.averageRating : 0}`);
+
+                    const reviewsBtn = $('.reviews_btn');
+                    reviewsBtn.text('관람평 (' + data.comments.length + ')');
+
+                    //댓글정보
+                    const reviewsSection = $('#reviews-table');
+                    reviewsSection.empty();
+                    data.comments.forEach((comment, index) => {
+                        if (index < maxCommentDisplay) {
+                            appendReviewRow(reviewsSection, comment, emojiMap);
+                        }
+                    });
+
+                    if (remainingCommentCount > 0) {
+                        $('#showMore_review').show(); // "more" 버튼 표시
+                    } else {
+                        $('#showMore_review').hide(); // "more" 버튼 숨김
+                    }
+
+                    if (currentCommentIndex > 0) {
+                        $('#showLess_review').show(); // "접기" 버튼 표시
+                    } else {
+                        $('#showLess_review').hide(); // "접기" 버튼 숨김
+                    }
+
+                    // "더보기" 버튼 클릭 이벤트 핸들러
+                    $('#showMore_review').click(() => {
+                        currentCommentIndex += maxCommentDisplay;
+                        reviewsSection.empty();
+                        data.comments.forEach((comment, index) => {
+                            if (index < currentCommentIndex + maxCommentDisplay) {
+                                appendReviewRow(reviewsSection, comment, emojiMap);
+                            }
+                        });
+
+                        $('#showMore_review').toggle(currentCommentIndex + maxCommentDisplay < data.comments.length);
+                        $('#showLess_review').show();
+                    });
+
+                    // "접기" 버튼 클릭 이벤트 핸들러
+                    $('#showLess_review').click(() => {
+                        currentCommentIndex = 0;
+                        reviewsSection.empty();
+                        data.comments.forEach((comment, index) => {
+                            if (index < maxCommentDisplay) {
+                                appendReviewRow(reviewsSection, comment, emojiMap);
+                            }
+                        });
+                        $('#showMore_review').show();
+                        $('#showLess_review').hide();
+                    });
+                },
+                error: (xhr, status, error) => {
+                    console.error("댓글을 불러오지 못했습니다:", error);
+                    $('#comments').append(`<div class="error"><p>댓글을 불러오는 중 오류가 발생했습니다. 나중에 다시 시도해주세요.</p></div>`);
+                }
+            });
+        };
+
+        loadComments();
+
+        //이메일 처리
+        function maskEmail(email) {
+            const atIndex = email.indexOf('@');
+            let emailName = email.slice(0, atIndex);
+            const emailDomain = email.slice(atIndex + 1);
+
+            if (emailName.length > 3) {
+                emailName = `${emailName.slice(0, -3)}***`;
+            } else {
+                emailName = '***';
+            }
+            return `${emailName}@${emailDomain}`;
+        }
+
+        function generateStars(grade) {
+            return '★'.repeat(grade);
+        }
+
+        //댓글 수만큼 반복생성
+        function appendReviewRow(reviewsSection, comment, emojiMap) {
+            const maskedEmail = maskEmail(comment.memberEmail);
+            const stars = generateStars(comment.grade);
+            const emoji = emojiMap[comment.grade] || '';
+            const isOwner = userEmail === comment.memberEmail;
+            // const adming =
+            const reviewRow = `
+
+        <tr>
+            <td>
+                <div class="review">
+                    <h4 class="review-user-email">${maskedEmail}</h4>
+                    <span class="review-emoji">${emoji}</span>
+                    <input class="review-stars" type="radio" id="${comment.grade}-stars" value="${comment.grade}" checked="checked" />
+                    <span class="review-comment" style="margin-left: 40px">${comment.comment}</span>
+                    <div class="review-right">
+                        <span class="review-date">${new Date().toISOString().slice(0, 10)}</span>
+                          ${isOwner ? `<button class="delete-btn" data-comment-id="${comment.cno}" style="margin-left: 20px;">삭제</button>` : ''}
+                    </div>
+                </div>
+            </td>
+        </tr>
+    `;
+            reviewsSection.append(reviewRow);
+        }
+
+        // 찜하기 관련 함수 시작 //
+        $(document).ready(function () {
+
+            let isFavorited = false; // 현재 사용자의 찜하기(좋아요) 상태를 저장할 변수임
+
+            // 현재 찜하기 상태를 가져오기 위해 서버에서 상태 호출
+            $.ajax({
+                url: '/favorites/check/' + userEmail + '/' + movieId,
+                type: 'GET',
+                data: {
+                    userEmail: userEmail,
+                    movieId: movieId
+                },
+                success: function (response) {
+                    // 응답에서 현재 리액션 상태를 받아와 버튼 상태를 업데이트
+                    isFavorited = response.isFavorited;
+                    updateFavoriteButton(isFavorited)
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching current reaction:', status, error);
+                }
+            });
+
+            // 찜하기 버튼을 클릭했을때 찜하기 버튼의 상태에따라 서버에 요청을보냄
+            // 찜하기 버튼이 이미 클릭한 상태일때 -> 찜하기 취소
+            // 찜하기 버튼이 클릭하지 않은 상태일때 -> 찜목록 추가
+            $("#favoriteButton").click(function () {
+
+                checkAnonymousUser();
+
+                if (isFavorited === false) {
+                    // 찜하기 요청 (POST 요청)
+                    $.ajax({
+                        url: '/favorites/' + userEmail + '/' + movieId,
+                        type: 'POST',
+                        success: function (response) {
+                            isFavorited = true;
+                            updateFavoriteButton(isFavorited)
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("좋아요 등록 실패", error)
+                        }
+                    });
+                } else {
+                    // 찜하기 삭제요청 (DELETE 요청)
+                    $.ajax({
+                        url: '/favorites/' + userEmail + '/' + movieId,
+                        type: 'DELETE',
+                        success: function (response) {
+                            isFavorited = false;
+                            updateFavoriteButton(isFavorited)
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("좋아요 등록 실패", error)
+                        }
+                    });
+                }
+            });
+
+            // 버튼상태 표시하는 업데이트 함수
+            // 클래스에 따라 css가 바뀌어서 클릭한것과 안한것 표시 다르게 함
+            function updateFavoriteButton(isFavorited) {
+                var favoriteButton = $('#favoriteButton');
+                if (isFavorited) {
+                    favoriteButton.addClass('favorited'); // 찜한 상태 클래스 추가
+                } else {
+                    favoriteButton.removeClass('favorited'); // 찜한 상태 클래스 제거
+                }
+            }
+        });
+
+
+        /* 좋아요 싫어요 슬퍼요 등등 리액션 관련 함수 시작 */
+
+        var currentReactions = {}; // 사용자의 현재 리액션 선택을 추적하는 객체
+
+        var userEmail = [[${userEmail}]];
+
+        var isRequestPending = false; // 비동기 요청 상태를 추적하는 플래그
+
+        var userCurrentReaction = null; // 현재 사용자의 리액션 상태를 저장할 변수
+
+        // 비회원 체크
+        function checkAnonymousUser() {
+            if (!userEmail || userEmail === 'anonymousUser') {
+                window.warningAlert('로그인이 필요합니다.');
+                return true;
+            }
+            return false;
+        }
+
+        // 리액션 추가 함수
+        async function addReaction(userEmail, movieId, reactionType) {
+
+            if (isRequestPending) {
+                return; // 비동기 요청 중이면 클릭을 무시
+            }
+            isRequestPending = true; // 비동기 요청 시작
+
+            try {
+                if (!currentReactions) {
+                    currentReactions = {};
+                }
+
+                if (!(movieId in currentReactions)) {
+                    currentReactions[movieId] = {};
+                }
+
+                var currentMemberReaction = currentReactions[movieId][userEmail];
+
+                if (currentMemberReaction === reactionType) {
+                    await removeReaction(userEmail, movieId, reactionType);
+                    delete currentReactions[movieId][userEmail];
+                } else {
+                    if (currentMemberReaction) {
+                        await removeReaction(userEmail, movieId, currentMemberReaction);
+                    }
+                    await sendReaction(userEmail, movieId, reactionType);
+                    currentReactions[movieId][userEmail] = reactionType;
+                }
+            } catch (error) {
+                console.error('Error processing reaction:', error);
+            } finally {
+                isRequestPending = false;
+            }
+        }
+
+        // 리액션 서버로 보내는 함수
+        function sendReaction(userEmail, movieId, reactionType, retryCount = 0) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: '/add',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        userEmail: userEmail,
+                        movieId: movieId,
+                        reactionType: reactionType
+                    }),
+                    success: function (response) {
+                        console.log('Response:', response);
+                        updateReactionCount(movieId);
+                        resolve(response);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error removing reaction:', status, error);
+                        if (retryCount < 3) {
+                            console.log(`Retrying... (${retryCount + 1}/3)`);
+                            resolve(removeReaction(userEmail, movieId, reactionType, retryCount + 1));
+                        } else {
+                            console.log('XHR Object:', xhr);
+                            console.log('Response Text:', xhr.responseText);
+                            reject(error);
+                        }
+                    }
+                });
+            });
+        }
+
+        // 서버에서 리액션 숫자받아와서 카운트하는 함수
+        function updateReactionCount(movieId) {
+            $.ajax({
+                url: '/movie/' + movieId,
+                type: 'GET',
+                success: function (response) {
+                    $('#likeCount_' + movieId).text(response.likeCount);
+                    $('#dislikeCount_' + movieId).text(response.dislikeCount);
+                    $('#sadCount_' + movieId).text(response.sadCount);
+                    $('#funnyCount_' + movieId).text(response.funnyCount);
+                    $('#scaryCount_' + movieId).text(response.scaryCount);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error updating reaction count", error);
+                }
+            });
+        }
+
+        // 리액션 삭제
+        function removeReaction(userEmail, movieId, reactionType, retryCount = 0) {
+            var data = {
+                userEmail: userEmail,
+                movieId: movieId,
+                reactionType: reactionType
+            };
+            // movieId(영화식별정보)가 없거나 userEmail(회원정보,로그인정보)가 없으면 return
+            // 버튼연타시 ajax 요청 꼬이는거 방지할려고 추가함
+            if (!userEmail || !movieId) {
+                console.error('Error removing reaction: userEmail or movieId is missing');
+                return;
+            }
+
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: '/remove',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                        console.log('Response:', response);
+                        updateReactionCount(movieId);
+                        if (currentReactions[movieId]) {
+                            delete currentReactions[movieId][userEmail];
+                            if (Object.keys(currentReactions[movieId]).length === 0) {
+                                delete currentReactions[movieId];
+                            }
+                        }
+                        resolve(response);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error removing reaction:', status, error);
+                        if (retryCount < 3) {
+                            console.log(`Retrying... (${retryCount + 1}/3)`);
+                            resolve(removeReaction(userEmail, movieId, reactionType, retryCount + 1));
+                        } else {
+                            console.log('XHR Object:', xhr);
+                            console.log('Response Text:', xhr.responseText);
+                            reject(error);
+                        }
+                    }
+                });
+            });
+        }
+
+        // 사용자의 현재 리액션 상태를 가져오는 함수
+        // 페이지 로드시 바로 발동되게 해놓음
+        // 현재 리액션상태를 가져와서 새로고침하면 중복으로 누를수있던부분 해결
+        function initializeReactions() {
+            // 현재 리액션 상태를 가져오기 위해 API 호출
+            $.ajax({
+                url: '/getCurrentReaction',
+                type: 'GET',
+                data: {
+                    userEmail: userEmail,
+                    movieId: movieId
+                },
+                success: function (response) {
+                    // 응답에서 현재 리액션 상태를 받아와 버튼 상태를 업데이트
+                    userCurrentReaction = response.reactionType;
+                    updateButtonState()
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching current reaction:', status, error);
+                }
+            });
+        }
+
+        // 버튼 상태 업데이트 함수 추가
+        function updateButtonState() {
+            // 모든 버튼에서 active 클래스를 제거
+            $('#likeButton, #dislikeButton, #sadButton, #funnyButton, #scaryButton').removeClass('active');
+
+            // 현재 리액션에 해당하는 버튼에 active 클래스 추가
+            // active 클래스 활용해서 선택한버튼에만 css를 추가해 꾸밀수있음
+            if (userCurrentReaction === 'LIKE') {
+                $('#likeButton').addClass('reaction, active');
+            } else if (userCurrentReaction === 'DISLIKE') {
+                $('#dislikeButton').addClass('reaction, active');
+            } else if (userCurrentReaction === 'SAD') {
+                $('#sadButton').addClass('reaction, active');
+            } else if (userCurrentReaction === 'reaction, active') {
+                $('#funnyButton').addClass('reaction, active');
+            } else if (userCurrentReaction === 'SCARY') {
+                $('#scaryButton').addClass('reaction, active');
+            }
+        }
+
+        // 리액션이 선택되있는 상태에서 다른 리액션 선택 ( 기존 리액션이 삭제되고 새 리액션이 추가됨)
+        function react(reactionType) {
+
+            // 비회원 체크
+            if (checkAnonymousUser()) {
+                return;
+            }
+            // 이전에 선택한 리액션을 서버에서 삭제
+            if (userCurrentReaction === reactionType) {
+                removeReaction(userEmail, movieId, reactionType)
+                userCurrentReaction = null;// 이전 리액션 상태를 초기화
+                updateButtonState()
+                return;
+            } else if (userCurrentReaction) {
+                removeReaction(userEmail, movieId, reactionType);
+                updateButtonState()
+            }
+            // 새로운 리액션을 추가하고 클라이언트 측의 리액션 상태 업데이트
+            addReaction(userEmail, movieId, reactionType)
+            userCurrentReaction = reactionType; // 새로운 리액션 상태 설정
+            updateButtonState()
+        }
+
+        function updateMetaDescription() {
+            var detailElement = document.querySelector('.movie_detail');
+            if (detailElement) {
+                var detailText = detailElement.innerText;
+                var metaDescription = document.getElementById('og-description');
+                if (metaDescription) {
+                    metaDescription.setAttribute('content', detailText);
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            updateMetaDescription();
+            // Kakao SDK 초기화
+            Kakao.init('3d074cbbda365535b831c90baead22c2'); // 여기에 실제 Kakao 앱 키를 입력하세요.
+
+            var likeCountSpans = document.querySelectorAll('.like-count');
+            var dislikeCountSpans = document.querySelectorAll('.dislike-count');
+            var sadCountSpans = document.querySelectorAll('.sad-count');
+            var funnyCountSpans = document.querySelectorAll('.funny-count');
+            var scaryCountSpans = document.querySelectorAll('.scary-count');
+
+            // 리액션 div에 id 설정하는 부분
+            likeCountSpans.forEach(span => {
+                span.id = 'likeCount_' + movieId;
+            });
+            dislikeCountSpans.forEach(span => {
+                span.id = 'dislikeCount_' + movieId;
+            });
+            sadCountSpans.forEach(span => {
+                span.id = 'sadCount_' + movieId;
+            });
+            funnyCountSpans.forEach(span => {
+                span.id = 'funnyCount_' + movieId;
+            });
+            scaryCountSpans.forEach(span => {
+                span.id = 'scaryCount_' + movieId;
+            });
+            updateReactionCount(movieId);
+            initializeReactions();
+        });
+
+        $(document).on('click', '.delete-btn', function () {
+            const cno = $(this).data('comment-id');
+            deleteComment(cno);
+        });
+
+        function deleteComment(cno) {
+            // 먼저 SweetAlert로 삭제를 진행할 것인지 사용자에게 확인합니다.
+            Swal.fire({
+                title: "삭제 하시겠습니까?",
+                text: "삭제 하면 되돌릴 수 없습니다!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "삭제",
+                cancelButtonText: "취소"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // 사용자가 삭제를 확인한 경우에만 삭제 요청을 보냅니다.
+                    $.ajax({
+                        url: `/movies/delete/${cno}`,
+                        method: 'DELETE',
+                        success: function (response) {
+                            // 삭제가 성공적으로 이루어졌음을 사용자에게 알립니다.
+                            Swal.fire({
+                                title: "삭제되었습니다",
+                                text: "정상적으로 삭제되었습니다!",
+                                icon: "success"
+                            }).then(() => {
+                                // 사용자가 확인을 클릭한 경우에만 댓글 목록을 다시 로드합니다.
+                                loadComments(); // 댓글 목록 다시 로드
+                            });
+                        },
+                        error: function (xhr, status, error) {
+                            window.errorAlert("댓글을 삭제하는 중 오류가 발생했습니다. 나중에 다시 시도해주세요.");
+                        }
+                    });
+                }
+            });
+        }
+
+        // Kakao 공유 함수
+        function shareMessage() {
+            const currentUrl = window.location.href;
+            const urlSegments = currentUrl.split('/');
+            const movieId = urlSegments[urlSegments.length - 1];
+
+            const titleElement = document.querySelector('.movie_title');
+            const releaseDateElement = document.querySelector('.releaseDate');
+            const runtimeElement = document.querySelector('.runtime');
+            const imageElement = document.getElementById('resizedImageUrl');
+            const genresElement = document.querySelector('.genres');
+            const certificationElement = document.getElementById('certification'); // 심의 등급 요소
+
+            if (titleElement && releaseDateElement && runtimeElement && imageElement && genresElement) {
+                const title = titleElement.innerText.trim(); // trim()을 사용하여 좌우 공백 제거
+                const releaseDate = releaseDateElement.innerText.trim(); // 개봉 날짜
+                const runtime = runtimeElement.innerText.trim(); // 상영 시간
+                const imageUrl = imageElement.src
+
+                const genres = genresElement.innerText.trim(); // 장르 가져오기
+                const certificationValue = certificationElement.textContent;
+
+                Kakao.Link.sendDefault({
+                    objectType: 'feed',
+                    content: {
+                        title: title, // 제목
+                        description: `개봉 : ${releaseDate}  상영 시간: ${runtime} \n장르: ${genres} 등급: ${certificationValue}`, // 상세 내용에 정보 추가
+                        imageUrl: imageUrl, // 이미지 URL
+                        link: {
+                            mobileWebUrl: `http://localhost:8080/movies/${movieId}`, // 동적 이벤트 ID를 포함한 URL
+                            webUrl: `http://localhost:8080/movies/${movieId}`
+                        }
+                    }
+                });
+            } else {
+                console.error('필요한 요소를 찾을 수 없습니다.');
+            }
+        }
+
+        // 직접 등록한 영화 배우목록 화면에 띄우기
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // movieId가 10자리인 경우에만 실행되는 코드
+            if (movieId.length === 10) {
+                // 무비 ID를 기반으로 서버에 요청하여 해당 무비에 출연한 배우들의 ID 데이터를 가져옴
+                fetch(`/actors/${movieId}`)
+                    .then(response => response.json())
+                    .then(actorIds => {
+                        // 각 배우의 ID를 사용하여 추가적인 데이터를 요청하고 처리
+                        actorIds.forEach(actorId => {
+                            fetch(`/actor/${actorId}`)
+                                .then(response => response.json())
+                                .then(actorData => {
+                                    // actorData를 사용하여 필요한 작업 수행
+                                    // 각 배우 정보를 화면에 추가 (가로로 나열)
+                                    const castMembersDiv = document.getElementById('cast-members');
+                                    castMembersDiv.style.display = 'flex'; // Flexbox 레이아웃 적용
+                                    castMembersDiv.style.flexWrap = 'wrap'; // 요소들이 넘치면 다음 줄로 넘김
+                                    const actorDiv = createPersonDiv(actorData.actorName, actorData.actorProfilePic);
+                                    castMembersDiv.appendChild(actorDiv);
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching actor data:', error);
+                                });
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching actor IDs:', error);
+                    });
+            }
+
+            // 인물 정보와 이미지를 담은 div 생성 함수
+            function createPersonDiv(name, profilePath) {
+                const personDiv = document.createElement('div'); // 새로운 div 생성
+                personDiv.style.margin = '13px'; // 간격 설정
+                personDiv.style.width = '7em';
+                personDiv.style.height = 'auto';
+                personDiv.style.borderRadius = '10px';
+
+                const p = document.createElement('p');
+                p.innerHTML = `<p>${name}</p>`;
+                p.style.fontSize = '0.8em'; // 글자 크기 작게 설정
+                p.style.textAlign = 'center';
+
+                const img = document.createElement('img');
+                img.src = profilePath ? `https://image.tmdb.org/t/p/w200${profilePath}` : '/images/img_not_ready2.png';
+                img.alt = `${name}'s profile image`;
+                img.setAttribute('style', 'width: 100%; height: auto; border-radius: 10px;');
+
+                personDiv.appendChild(img);
+                personDiv.appendChild(p);
+
+                return personDiv;
+            }
+        });
+
+        //메세지알람 누르면 채팅방이동
+        function redirectToChatRoom() {
+            window.location.href = '/chatUser';
+        }
+
+    </script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html
+        lang="en"
+        class="light-style layout-menu-fixed"
+        dir="ltr"
+        data-theme="theme-default"
+        data-assets-path="../assets/"
+        data-template="vertical-menu-template-free"
+>
+<head>
+    <meta charset="utf-8"/>
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+
+    <title>Cinemacast</title>
+
+    <meta name="description" content=""/>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+
+<!--    &lt;!&ndash; Fonts &ndash;&gt;-->
+<!--    <link rel="preconnect" href="https://fonts.googleapis.com"/>-->
+<!--    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>-->
+<!--    <link-->
+<!--            href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"-->
+<!--            rel="stylesheet"-->
+<!--    />-->
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="/assets/vendor/css/core.css" class="template-customizer-core-css"/>
+    <link rel="stylesheet" href="/assets/vendor/css/theme-default.css" class="template-customizer-theme-css"/>
+    <link rel="stylesheet" href="/assets/css/demo.css"/>
+    <link rel="stylesheet" href="/assets/css/custom_player.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.js"></script>
+
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css"/>
+
+    <!-- Page CSS -->
+
+    <!-- Helpers -->
+    <script src="/assets/vendor/js/helpers.js"></script>
+
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+    <script src="/assets/js/config.js"></script>
+    <!-- SockJS 클라이언트 라이브러리 비동기 로드 -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+
+    <!-- STOMP 클라이언트 라이브러리 비동기 로드 -->
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+    <script>
+        var columnCount = document.querySelectorAll(".seat-input").length;
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        function numberToAlphabet(num) {
+            return alphabet[num];
+        }
+
+        function addNewRow() {
+            columnCount = document.querySelectorAll(".seat-input").length;
+            if (columnCount < alphabet.length) {
+                var alphabetIndex = numberToAlphabet(columnCount);
+                columnCount++;
+                var newRowHtml = `
+                <div class="mt-2 mb-3 col-sm-3">
+                    <label for="column-${alphabetIndex}-input" class="form-label">${alphabetIndex}열</label>
+                    <input id="column-${alphabetIndex}-input"
+                           class="form-control form-control-lg seat-input"
+                           type="number"
+                           name="seatRow"
+                           max="20"
+                           required/>
+                </div>
+            `;
+                var addColumn = document.querySelector('.add-column');
+                addColumn.insertAdjacentHTML('beforebegin', newRowHtml);
+            } else {
+                Swal.fire({
+                    title: '',
+                    text: '더 이상 열을 추가할 수 없습니다.',
+                    icon: 'error',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: '확인',
+                    cancelButtonText: '취소',
+                    reverseButtons: true,
+                });
+            }
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const selectedTheaterId = document.getElementById('theater-numbers-select').value;
+            const seatsPerTheater = document.getElementById('seats-count').dataset.seatspertheater;
+            const seatsPerTheaterInt = parseInt(seatsPerTheater, 10);
+
+            let totalSeats = 0;
+            const seatDTOList = [];
+            document.querySelectorAll('.form-control-lg').forEach(function(input) {
+                const inputValue = input.value;
+                const seatCount = parseInt(inputValue, 10);
+                const seatColumn = input.parentElement.querySelector('label').textContent.charAt(0); // Get the first character of label text
+
+                if (!isNaN(seatCount) && seatCount > 0) {
+                    totalSeats += seatCount;
+
+                    for (let i = 1; i <= seatCount; i++) {
+                        const dto = {
+                            seatRow: i,
+                            seatColumn: seatColumn,
+                            theaterNumberId: selectedTheaterId
+                        };
+                        seatDTOList.push(dto);
+                    }
+                }
+            });
+
+            if (totalSeats !== seatsPerTheaterInt) {
+                Swal.fire({
+                    title: '좌석 수 불일치',
+                    text: '입력 좌석 수 총합 : ' + totalSeats + ', 전체 좌석 수 : ' + seatsPerTheaterInt,
+                    icon: 'error'
+                });
+                return false;
+            }
+
+            const seatDataJson = JSON.stringify(seatDTOList);
+            document.getElementById('seatData').value = seatDataJson;
+
+            document.getElementById('seat-edit-form').submit();
+        }
+    </script>
+
+    <style>
+        /*안읽은 메세지 고정*/
+        .fixed-bottom-right {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            display: none; /* 초기에는 숨김 */
+        }
+        .fixed-bottom-right img {
+            width: 40px; /* 이미지 크기에 맞게 조정 */
+            height: 40px;
+            cursor: pointer; /* 클릭 가능하도록 설정 */
+        }
+        #unreadCount {
+            background-color: #f66952;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            text-align: center;
+            display: inline-block;
+            line-height: 20px; /* 수직으로 중앙에 위치 */
+            position: relative;
+            top: -2px; /* 중심 지점으로 조정 */
+            left: 10px; /* 중심 점에서 오프셋 */
+        }
+        #activeCount {
+            background-color: #f66952;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            text-align: center;
+            display: inline-block;
+            line-height: 20px; /* 수직으로 중앙에 위치 */
+            position: relative;
+            top: -2px; /* 중심 지점으로 조정 */
+            left: 10px; /* 중심 점에서 오프셋 */
+        }
+    </style>
+    <script type="module">
+        import {connectWebSocket, loadChatList, updateUnreadCount} from '/modules/chatModule.js';
+
+        // 페이지 로드 시 안읽은 메세지 불러오기
+        document.addEventListener('DOMContentLoaded', function () {
+            loadChatList(1, 1, 8, true);
+            setupWebSocketConnection(); // WebSocket 연결 설정
+        });
+
+        function setupWebSocketConnection() {
+            const options = {
+                subscribeCallback: handleWebSocketMessage
+            };
+            connectWebSocket(options);// WebSocket 연결 함수 호출
+        }
+
+        function handleWebSocketMessage(response) {
+            updateUnreadCount(response);
+        }
+    </script>
+</head>
+
+<body>
+<!-- Layout wrapper -->
+<div class="layout-wrapper layout-content-navbar">
+    <div class="layout-container">
+        <!-- Menu -->
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+            <div class="app-brand demo">
+                <span class="app-brand-text demo fw-bolder">admin page</span>
+
+                <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+                    <i class="bx bx-chevron-left bx-sm align-middle"></i>
+                </a>
+            </div>
+
+            <div class="menu-inner-shadow"></div>
+
+            <ul class="menu-inner py-1" style="margin-bottom: 5em">
+                <!-- Members -->
+                <li class="menu-header small text-uppercase">
+                    <span class="menu-header-text">회원관리</span>
+                </li>
+                <li class="menu-item">
+                    <a href="javascript:void(0);" class="menu-link member_btn">
+                        <i class="menu-icon tf-icons bx bx-dock-top"></i>
+                        <div data-i18n="Account Settings">회원 목록</div>
+                    </a>
+                </li>
+
+                <!-- Movies -->
+                <li class="menu-header small text-uppercase"><span class="menu-header-text">영화 관리</span></li>
+
+                <li class="menu-item">
+                    <a href="javascript:void(0)" class="menu-link movie_btn">
+                        <i class="menu-icon tf-icons bx bx-box"></i>
+                        <div data-i18n="User interface">영화 목록</div>
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a href="javascript:void(0)" class="menu-link movie_register_btn">
+                        <i class="menu-icon tf-icons bx bx-box"></i>
+                        <div data-i18n="User interface">영화 등록하기</div>
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a href="javascript:void(0)" class="menu-link movie_comment_btn">
+                        <i class="menu-icon tf-icons bx bx-box"></i>
+                        <div data-i18n="User interface">영화 리뷰 관리</div>
+                    </a>
+                </li>
+
+                <!-- Theaters -->
+                <li class="menu-header small text-uppercase"><span class="menu-header-text">상영관관리</span></li>
+
+                <li class="menu-item">
+                    <a href="#" class="menu-link theater_reg_btn">
+                        <i class="menu-icon tf-icons bx bx-collection"></i>
+                        <div data-i18n="Basic">상영관 등록하기</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link seat_reg_btn">
+                        <i class="menu-icon tf-icons bx bx-collection"></i>
+                        <div data-i18n="Basic">상영관 좌석 배치하기</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="javascript:void(0)" class="menu-link theater_btn">
+                        <i class="menu-icon tf-icons bx bx-box"></i>
+                        <div data-i18n="User interface">상영관 목록</div>
+                    </a>
+                </li>
+
+                <!-- screening schedule -->
+                <li class="menu-header small text-uppercase"><span class="menu-header-text">상영스케줄관리</span></li>
+
+                <li class="menu-item">
+                    <a href="#" class="menu-link schedule_reg_btn">
+                        <i class="menu-icon tf-icons bx bx-collection"></i>
+                        <div data-i18n="Basic">상영스케줄 등록하기</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="javascript:void(0)" class="menu-link schedule_btn">
+                        <i class="menu-icon tf-icons bx bx-box"></i>
+                        <div data-i18n="User interface">상영스케줄 목록</div>
+                    </a>
+                </li>
+
+                <!-- Snacks -->
+                <li class="menu-header small text-uppercase"><span class="menu-header-text">스낵스토어 관리</span></li>
+
+                <li class="menu-item">
+                    <a href="javascript:void(0)" class="menu-link snack_reg_btn">
+                        <i class="menu-icon tf-icons bx bx-collection"></i>
+                        <div data-i18n="Basic">스낵 등록하기</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="javascript:void(0)" class="menu-link snack_btn">
+                        <i class="menu-icon tf-icons bx bx-box"></i>
+                        <div data-i18n="User interface">스낵 목록</div>
+                    </a>
+                </li>
+
+                <!-- Events -->
+                <li class="menu-header small text-uppercase"><span class="menu-header-text">상담문의관리</span></li>
+
+                <li class="menu-item">
+                    <a href="javascript:void(0);" class="menu-link chat_btn">
+                        <i class="menu-icon tf-icons bx bx-detail"></i>
+                        <div data-i18n="Form interface">1:1 채팅 <span id="unreadCount">0</span></div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="javascript:void(0);" class="menu-link inquiry_btn">
+                        <i class="menu-icon tf-icons bx bx-detail"></i>
+                        <div data-i18n="Form interface">이메일 문의 <span id="activeCount">0</span></div>
+                    </a>
+                </li>
+
+                <!-- Events -->
+                <li class="menu-header small text-uppercase"><span class="menu-header-text">이벤트관리</span></li>
+
+                <li class="menu-item">
+                    <a href="javascript:void(0);" class="menu-link event_reg_btn">
+                        <i class="menu-icon tf-icons bx bx-detail"></i>
+                        <div data-i18n="Form Elements">이벤트 등록하기</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="javascript:void(0);" class="menu-link event_btn">
+                        <i class="menu-icon tf-icons bx bx-detail"></i>
+                        <div data-i18n="Form Layouts">이벤트 목록</div>
+                    </a>
+                </li>
+
+                <!-- Notices -->
+                <li class="menu-header small text-uppercase"><span class="menu-header-text">공지사항관리</span></li>
+
+                <li class="menu-item">
+                    <a href="javascript:void(0);" class="menu-link notice_reg_btn">
+                        <i class="menu-icon tf-icons bx bx-detail"></i>
+                        <div data-i18n="Form Elements">공지사항 등록하기</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="javascript:void(0);" class="menu-link notice_btn">
+                        <i class="menu-icon tf-icons bx bx-detail"></i>
+                        <div data-i18n="Form Layouts">공지사항 목록</div>
+                    </a>
+                </li>
+
+
+                <!--                Main Page -->
+                <li class=" small text-uppercase"><span class="menu-header-text"></span></li>
+                <li class="menu-item">
+                    <a href="/" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-detail"></i>
+                        <div data-i18n="Form Layouts">Main Page</div>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+        <div class="layout-page">
+            <!-- Content wrapper -->
+            <div class="content-wrapper">
+                <!-- Content -->
+                <div class="container-xxl flex-grow-1 container-p-y">
+
+                </div>
+            </div>
+            <!-- Content wrapper -->
+        </div>
+        <!-- / Layout page -->
+    </div>
+
+    <!-- Overlay -->
+    <div class="layout-overlay layout-menu-toggle"></div>
+</div>
+<!-- / Layout wrapper -->
+
+<!-- Core JS -->
+<!-- build:js assets/vendor/js/core.js -->
+<script src="/assets/vendor/libs/jquery/jquery.js"></script>
+<script src="/assets/vendor/libs/popper/popper.js"></script>
+<script src="/assets/vendor/js/bootstrap.js"></script>
+<script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+
+<script src="/assets/vendor/js/menu.js"></script>
+<!-- endbuild -->
+
+<!-- Vendors JS -->
+
+<!-- Main JS -->
+<script src="/assets/js/main2.js"></script>
+
+<!-- Page JS -->
+
+<script th:inline="javascript">
+    $(document).ready(function () {
+
+        // 멤버 관리
+        $('.member_btn').on('click', function () {
+            $('.container-xxl').load('/admin/memberList', {type: 'POST'});
+        });
+        // 영화 관리
+        $('.movie_btn').on('click', function () {
+            $('.container-xxl').load('/admin/movieList', {type: 'POST'});
+        });
+        $('.movie_register_btn').on('click', function () {
+            $('.container-xxl').load('/admin/movieRegister', {type : 'POST'});
+            clearSelectedActors();
+        });
+        $('.movie_comment_btn').on('click', function (){
+            $('.container-xxl').load('/admin/commentList', {type : 'POST'});
+        });
+        // 상영관 관리
+        $('.theater_reg_btn').on('click', function (e) {
+            e.preventDefault();
+            $('.container-xxl').load('/admin/theaterRegister');
+        });
+        $('.seat_reg_btn').on('click', function (e) {
+            e.preventDefault();
+            $.ajax({
+                type: "GET",
+                url: "/admin/seatRegister",
+                success: function (data) {
+                    $('.container-xxl').html(data);
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX 요청 실패:", error);
+                }
+            });
+        });
+        $('.theater_btn').on('click', function () {
+            $('.container-xxl').load('/admin/theaterList');
+        });
+        // 상영시간 관리
+        $('.schedule_reg_btn').on('click', function (e) {
+            e.preventDefault();
+            $('.container-xxl').load('/admin/scheduleRegister');
+        });
+        $('.schedule_btn').on('click', function () {
+            $('.container-xxl').load('/admin/scheduleList');
+        });
+        // 스낵 관리
+        $('.snack_reg_btn').on('click', function (e) {
+            e.preventDefault()
+            $('.container-xxl').load('/admin/snackRegister');
+        });
+        $('.snack_btn').on('click', function () {
+            $('.container-xxl').load('/admin/snackList');
+        });
+        //이벤트 추가
+        $('.event_reg_btn').on('click', function () {
+            $('.container-xxl').load('/admin/eventRegister');
+        });
+        //이벤트 목록
+        $('.event_btn').on('click', function () {
+            $('.container-xxl').load('/admin/eventList');
+        });
+        //공지사항 추가
+        $('.notice_reg_btn').on('click', function (e) {
+            e.preventDefault()
+            $('.container-xxl').load('/admin/noticeRegister');
+        });
+        //공지사항 목록
+        $('.notice_btn').on('click', function () {
+            $('.container-xxl').load('/admin/noticeList');
+        });
+        //채팅 관리
+        $('.chat_btn').on('click', function () {
+            $('.container-xxl').load('/admin/chatList');
+        });
+        //이메일 문의 관리
+        $('.inquiry_btn').on('click', function () {
+            $('.container-xxl').load('/admin/inquiryList');
+        });
+    });
+
+    connect();
+
+    fetchUnansweredInquiryCount();
+
+    function connect() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            stompClient.subscribe("/Topic/unansweredCount", function (message) {
+                const count = JSON.parse(message.body); // 메시지 body에서 카운트 추출
+                updateUnansweredCount(count); // UI 업데이트 함수 호출
+            });
+        });
+    }
+
+    function updateUnansweredCount(count) {
+        if (count > 0) {
+            $('#activeCount').text(count).show(); // 숫자를 표시하고 요소를 보이게 함
+        } else {
+            $('#activeCount').hide(); // 숫자가 0일 때 요소를 숨김
+        }
+    }
+
+    // // 미답변 문의 갯수를 가져와서 표시하는 함수
+    function fetchUnansweredInquiryCount() {
+        $.ajax({
+            type: "GET",
+            url: "/admin/unansweredInquiryCount",
+            success: function(response) {
+                 // 서버에서 받은 미답변 문의 갯수
+                updateUnansweredCount(response); // 미답변 문의 갯수 업데이트 함수 호출
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX 요청 실패:", error);
+            }
+        });
+    }
+</script>
+<!-- Place this tag in your head or just before your close body tag. -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+</body>
+</html>

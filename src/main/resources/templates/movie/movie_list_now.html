@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{layout/layout_total}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<body class="no-sidebar is-preload">
+<th:block layout:fragment="content">
+    <div id="page-wrapper">
+        <!-- Main movie_list 한 페이지에 16개 정도되게 해주세요 -->
+        <div class="wrapper style1 movie_list">
+
+            <div class="container">
+                <article id="main" class="special">
+                    <header>
+                        <h3>현재 상영작</h3>
+                        <p>
+                            다양한 장르와 감동이 어우러진 선택의 폭을 경험하세요.<br/>
+                            신선한 스토리와 멋진 시각 효과가 함께하는 최신 작품들로 여러분을 초대합니다.
+                        </p>
+                    </header>
+                </article>
+                <hr/>
+                <div class="row">
+
+                    <article class="col-3 col-12-mobile special" th:each="movie, iterStat : ${moviePage}">
+                        <a th:href="@{'/movies/' + ${movie.id}}" class="image featured">
+                            <img th:if="${#strings.length(movie.id) == 10}"
+                                 class="featured-img fixed-height-image"
+                                 th:src="@{|/${movie.posterPath}|}" alt="배경사진"
+                            />
+                            <img th:if="${movie.posterPath != 'null' && #strings.length(movie.id) != 10}"
+                                 class="featured-img fixed-height-image"
+                                 th:src="@{'https://image.tmdb.org/t/p/w500' + ${movie.posterPath}}" alt="배경 사진"
+                            />
+                            <img th:if="${movie.posterPath == 'null' && #strings.length(movie.id) != 10}"
+                                 class="featured-img fixed-height-image"
+                                 th:src="@{/images/img_not_ready.png}" alt="배경 사진"
+                            />
+                        </a>
+                        <header>
+                            <h4><a th:href="@{'/movies/' + ${movie.id}}"><span th:text="${movie.title}">영화 이름</span></a>
+                            </h4>
+                        </header>
+                    </article>
+                </div>
+
+                <!-- 페이지네이션 -->
+                <div class="pagination">
+                    <a href="#" th:if="${moviePage.hasPrevious()}"
+                       th:href="@{/nowMovies(page=${moviePage.number - 1})}">
+                        <img class="movement-btn" src="/images/left-arrow.png" alt="이전페이지"/>
+                    </a>
+                    <span th:each="pageNum : ${#numbers.sequence(0, moviePage.totalPages - 1)}">
+        <a th:href="@{/nowMovies(page=${pageNum})}"
+           class="page"
+           th:text="${pageNum + 1}"
+           th:if="${pageNum != moviePage.number}"></a>
+        <span th:if="${pageNum == moviePage.number}"
+              th:text="${pageNum + 1}"
+              class="current-page"></span>
+    </span>
+                    <a href="#" th:if="${moviePage.hasNext()}"
+                       th:href="@{/nowMovies(page=${moviePage.number + 1})}">
+                        <img class="movement-btn" src="/images/right-arrow.png" alt="다음페이지" />
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</th:block>
+</body>
+</html>
