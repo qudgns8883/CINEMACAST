@@ -419,7 +419,7 @@
                 let messageTimestamp = new Date(message.createAt).getTime();
 
                 // 메시지 생성 시간이 마지막 읽은 시간 이후, 플래그가 false이며, 읽은 시간이 없으면
-                if (messageTimestamp > lastReadTimestamp && !unreadMessageFlag && lastReadTimestamp !== 0) {
+                if (lastReadTimestamp !== 0 && messageTimestamp > lastReadTimestamp && !unreadMessageFlag){
                     showMessage('이전 메시지');
                     unreadMessageFlag = true;
                 }

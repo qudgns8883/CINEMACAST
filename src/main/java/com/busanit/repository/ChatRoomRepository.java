@@ -34,15 +34,12 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     @Query("SELECT cr FROM ChatRoom cr WHERE cr.id = :chatRoomId")
     ChatRoom findByChatRoomId(@Param("chatRoomId") Long chatRoomId);
 
-
-//    Page<ChatRoom> findByMembersEmailAndType(String memberEmail, String type, Pageable pageable);
     //타입별로 메세지생성시간에 따라 채팅방반환
-    @Query("SELECT DISTINCT c " +
-            "FROM ChatRoom c " +
-            "JOIN FETCH c.messages m " +
-            "JOIN c.readStatuses rs " +
-            "WHERE rs.member.email = :memberEmail " +
-            "AND c.type = :type " +
+    @Query("SELECT DISTINCT cr " +
+            "FROM ChatRoom cr " +
+            "LEFT JOIN FETCH cr.messages m " +
+            "WHERE cr.type = :type " +
+            "AND cr.id IN (SELECT rs.chatRoom.id FROM ChatRoomReadStatus rs WHERE rs.member.email = :memberEmail) " +
             "ORDER BY m.regDate DESC")
     Page<ChatRoom> findByMembersEmailAndType(@Param("memberEmail") String memberEmail, @Param("type") String type, Pageable pageable);
 }

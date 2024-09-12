@@ -14,5 +14,4 @@ public interface ChatRoomReadStatusRepository extends JpaRepository<ChatRoomRead
 
     Optional<ChatRoomReadStatus> findByChatRoomIdAndMemberEmail(Long chatRoomId, String memberEmail);
 
-
 }

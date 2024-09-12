@@ -44,7 +44,7 @@ public class MemberService implements UserDetailsService { /* UserDetailsService
     }
 
     // 회원 중복 체크
-    private void validateDuplicateMember(Member member) {
+    public void validateDuplicateMember(Member member) {
         Optional<Member> findMember = memberRepository.findByEmail(member.getEmail());
 
         // isPresent() - Optional 객체가 값을 가지고 있으면 true, 없으면 false 반환
