@@ -80,11 +80,11 @@ JAVA, MYSQL, JPA, Spring Framework, CSS3, HTML5, BOOTSTRAP, JAVASCRIPT, JQUERY
 * 이벤튼, 공지사항 작성
 * 1대 1 채팅, 문의 답변
 
-###📧 이메일 기능 설정
+### 📧 이메일 기능 설정
 구성 편집: 이메일 기능을 사용하기 위해 환경변수로 네이버 아이디와 비밀번호를 설정해야합니다.
 adminPassword= ; adminEmail=
 
-###🚫 소셜 로그인
+### 🚫 소셜 로그인
 client-id=, client-secret=와 같은 민감한 정보가 포함되어 있어서 보안상의 이유로 소셜로그인은 비활성화했으며
 클라이언트 ID 및 비밀번호 누락: 소셜 로그인 기능을 활성화하기 위해 필요한 client-id와 client-secret 설정이 없습니다.
 
