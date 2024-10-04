@@ -9,11 +9,16 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @EnableScheduling
 @SpringBootApplication
 @EnableAsync
 public class TeamProject2405Application implements CommandLineRunner {
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private MemberService memberService;
@@ -31,8 +36,7 @@ public class TeamProject2405Application implements CommandLineRunner {
             Member admin = new Member();
             admin.setName("Admin");
             admin.setEmail(email);
-            admin.setPassword("adminpw");
-            admin.setCheckedTermsE(true);
+            admin.setPassword(passwordEncoder.encode("adminpw"));
             admin.setCheckedTermsS(false);
             admin.setSocial(false);
             admin.setGrade_code(1);
