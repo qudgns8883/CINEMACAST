@@ -72,22 +72,22 @@ public class MovieService {
     // 상영작/상영예정작을 구분하기위한 로직중 개봉일자를 날짜타입에 맞추기위한 fomatter
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    @Scheduled(fixedRate = 43200000) // 12시간마다 데이터 갱신
-    public void fetchAndStoreMovies() throws IOException {
-        fetchAndStoreMoviesNowPlaying();
-        fetchAndStoreMoviesUpcoming();
-        fetchAndStoreMovieRuntimeAndReleaseData();
-        fetchAndStoreMovieStillCuts();
-        fetchAndStoreCertificationData();
-        fetchKoreanActors();
-
-        // 데이터 로컬 캐시 전략
-        cachedActors = getActors();
-        cachedVideoMovies = getVideoMovies();
-        cachedAllMovies = getAll();
-        cachedHotMovies = getHotMovies();
-        lastFetchDate = LocalDate.now();
-    }
+//    @Scheduled(fixedRate = 43200000) // 12시간마다 데이터 갱신
+//    public void fetchAndStoreMovies() throws IOException {
+//        fetchAndStoreMoviesNowPlaying();
+//        fetchAndStoreMoviesUpcoming();
+//        fetchAndStoreMovieRuntimeAndReleaseData();
+//        fetchAndStoreMovieStillCuts();
+//        fetchAndStoreCertificationData();
+//        fetchKoreanActors();
+//
+//        // 데이터 로컬 캐시 전략
+//        cachedActors = getActors();
+//        cachedVideoMovies = getVideoMovies();
+//        cachedAllMovies = getAll();
+//        cachedHotMovies = getHotMovies();
+//        lastFetchDate = LocalDate.now();
+//    }
 
     // 어드민페이지에서 영화를 삭제했을때 만약 API에서 주기적으로 받아와 서버에 저장하고있는 영화라면
     private List<Long> getBlacklistedMovieIds() {
