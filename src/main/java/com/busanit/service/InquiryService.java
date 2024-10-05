@@ -37,6 +37,9 @@ public class InquiryService {
     private final InquiryReplyRepository inquiryReplyRepository;
     private final JavaMailSender mailSender;
 
+    @Value("${server.serverAddress}")
+    private String serverAddress;
+
     //문의 추가
     public void InquiryRegister(InquiryDTO inquiryDTO) throws MessagingException, jakarta.mail.MessagingException  {
 
@@ -153,7 +156,7 @@ public class InquiryService {
                 + "<p><strong>답변 내용:</strong></p>"
                 + "<p>" + replyMessage + "</p>"
                 + "</div>"
-                + "<p>추가 질문이 있으시면 언제든지 <a href='http://localhost:8080/inquiry#contact'>여기</a>를 클릭하여 문의해 주세요.</p>"
+                + "<p>추가 질문이 있으시면 언제든지 <a href='http://" + ("localhost".equals(serverAddress) ? "localhost:8080" : serverAddress) + "/inquiry#contact'>여기</a>를 클릭하여 문의해 주세요.</p>"
                 + "<p>감사합니다.</p>"
                 + "<p>고객 지원팀 드림</p>"
                 + "</div>";
