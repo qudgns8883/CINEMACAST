@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: blue  # 현재 활성화된 프로파일을 'local'로 설정
+    active: local  # 현재 활성화된 프로파일을 'local'로 설정
     group:         # 프로파일 그룹 정의
       local: local, common  # 'local' 프로파일을 활성화하면 'common' 활성화
       blue: blue, common    # 'blue' 프로파일을 활성화하면 'blue', 'common' 활성화
