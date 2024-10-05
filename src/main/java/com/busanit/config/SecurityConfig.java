@@ -25,11 +25,19 @@ public class SecurityConfig {
         return http
                 .csrf(httpSecurityCsrfConfigurer -> httpSecurityCsrfConfigurer.disable()) // csrf 끄기
                 .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.disable()) // cors 끄기
-
-
+//                .sessionManagement(httpSecuritySessionManagementConfigurer ->
+//                        httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)) // 세션 생성 정책 설정
+//                .sessionManagement(httpSecuritySessionManagementConfigurer ->
+//                        httpSecuritySessionManagementConfigurer.sessionFixation().none())
                 .authorizeHttpRequests(authorizeHttpRequestConfigurer -> authorizeHttpRequestConfigurer
-                        .anyRequest().permitAll() // 모든 요청을 허용
-                )
+                        .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
+                        .requestMatchers("/assets/**", "/images/**", "/jquery/**").permitAll()
+                        .requestMatchers("/", "/member/**", "/**").permitAll() // 모든 사용자에게 허용 (수정예정) /** 부분 수정하기(개발하기 편하려고 다 오픈한거임)
+                        .requestMatchers("/admin/**").hasRole("ADMIN") // ADMIN 에게만 허용 (수정예정) admin 전부를 거부하는건 너무 광범위함 보안에 취약해지는듯 관리자 페이지를 전부 구현하면 해당 페이지만 거부해야겠음
+                        .requestMatchers("/ws/**").permitAll() // // WebSocket 엔드포인트는 인증 없이 접근 가능
+                        .anyRequest().authenticated() // 나머지 요청은 인증된 사용자만 접근 가능
+                ) // 인증별 권한 설정
+
                 .formLogin(formLoginConfigurer -> formLoginConfigurer
                         .loginPage("/member/login") // login 기본페이지 (주석 처리하면 기본 시큐리티 페이지로 사용 가능)
                         //.loginProcessingUrl("/loginProcess")
