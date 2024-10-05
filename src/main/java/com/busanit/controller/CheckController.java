@@ -20,8 +20,8 @@ public class CheckController {
     @Value("${serverName}")
     private String serverName;
 
-    @GetMapping("/check")
-    public ResponseEntity<?> Check(){
+    @GetMapping("/hc")
+    public ResponseEntity<?> healthCheck(){
 
         Map<String, String> responseData = new HashMap<>();
         responseData.put("serverName", serverName);

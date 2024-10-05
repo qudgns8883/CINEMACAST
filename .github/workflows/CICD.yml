@@ -70,6 +70,11 @@ jobs:
           script: |
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/live_server:latest
             sudo docker-compose -f docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d
+
+      - name: Debug Environment Variables
+        run: |
+          echo "CURRENT_UPSTREAM=${{ env.CURRENT_UPSTREAM }}"
+          echo "STOPPED_PORT=${{ env.STOPPED_PORT }}"      
       
       - name: Check deploy server URL
         uses: jtalk/url-health-check-action@v3
