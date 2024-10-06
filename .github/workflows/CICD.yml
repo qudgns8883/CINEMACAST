@@ -60,11 +60,6 @@ jobs:
             echo "TARGET_UPSTREAM=blue" >> $GITHUB_ENV
           fi
           
-          echo "CURRENT_UPSTREAM: $CURRENT_UPSTREAM" 
-          echo "CURRENT_PORT: $CURRENT_PORT"  
-          echo "STOPPED_PORT: $STOPPED_PORT"  
-          echo "TARGET_UPSTREAM: $TARGET_UPSTREAM" 
-          
       - name: Docker compose
         uses: appleboy/ssh-action@master
         with:
@@ -73,6 +68,10 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
           script: |
+            echo "CURRENT_UPSTREAM: $CURRENT_UPSTREAM"
+            echo "CURRENT_PORT: $CURRENT_PORT"
+            echo "STOPPED_PORT: $STOPPED_PORT"
+            echo "TARGET_UPSTREAM: $TARGET_UPSTREAM"
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/live_server:latest
             sudo docker-compose -f docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d
 
