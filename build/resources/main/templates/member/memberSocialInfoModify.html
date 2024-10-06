@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:layout="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cinemacast</title>
+    <link href="/assets/css/login.css" rel="stylesheet"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            let reset = $("#reset");
+
+            //----------- reset ---------------------
+            reset.on("click", function (e) {
+                e.preventDefault();
+                $(this).parent().parent().siblings("form")
+                    .find(".input__block").find(".input").val("");
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="container">
+    <!-- Heading -->
+    <h1>비밀번호 / 나이 재설정</h1>
+
+    <ul class="links">
+        <li>
+            <a href="#" id="signin"></a>
+        </li>
+        <li>
+            <a href="#" id="signup"></a>
+        </li>
+        <li>
+            <a href="#" id="reset">RESET</a>
+        </li>
+    </ul>
+
+    <!-- Form -->
+    <form action="/member/modifySocialInfo" id="find_email_form" method="post">
+        <!-- password1 input -->
+        <div class="first-input input__block first-input__block">
+            <input aria-describedby="passwordHelpBlock" class="input" id="password1" name="password" placeholder="비밀번호"
+                   required
+                   type="password"/>
+        </div>
+        <!-- password2 input -->
+        <div class="input__block">
+            <input aria-describedby="passwordHelpBlock" class="input" id="password2" name="password2"
+                   placeholder="비밀번호를 한번 더 입력해주세요."
+                   required type="password"/>
+        </div>
+        <!-- age input -->
+        <div class="input__block">
+            <input class="input" id="age" name="age"
+                   placeholder="Birth Date ex) 240101"
+                   required type="text"/>
+        </div>
+        <!-- sign in button -->
+        <button class="signin_btn" type="submit">
+            변경
+        </button>
+    </form>
+</div>
+
+<footer>
+    <p>
+        Thank you for watching
+    </p>
+</footer>
+
+<!--sweetalert 사용 -->
+<script src="/personal-scripts/util.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $("[type=submit]").on("click", function (e) {
+            e.preventDefault();
+
+            const password1 = $("#password1");
+            const password2 = $("#password2");
+            const age = $("#age");
+
+            if (password1.val().length < 1) {
+                swtAlertOne("비밀번호를 입력해주세요.");
+                password1.focus();
+                return false;
+            }
+
+            if (password1.val() !== password2.val()) {
+                swtAlertOne("비밀번호가 서로 다릅니다. 확인해주세요.");
+                password2.select();
+                return false;
+            }
+
+            if (age.val().length < 1) {
+                swtAlertOne("생년월일을 입력해주세요.");
+                age.focus();
+                return false;
+            }
+
+            if (!(age.val().length === 6)) {
+                swtAlertOne("생년월일을 다시 확인해주세요. ex) 240101");
+                age.focus();
+                return false;
+            }
+
+            // 이상없으면 submit 진행
+            $("#find_email_form").submit(); // 특정 폼 선택기 사용
+        });
+    });
+</script>
+
+</body>
+</html>

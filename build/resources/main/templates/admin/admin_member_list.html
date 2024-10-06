@@ -1,0 +1,145 @@
+<style>
+    .nav-item form {
+        display: flex;
+        align-items: center;
+        width: 100%; /* 폼 전체가 넓이를 차지하도록 설정 */
+    }
+
+    .nav-item .form-control {
+        flex: 1; /* 입력란이 가능한 넓게 확장되도록 설정 */
+        white-space: nowrap; /* 입력란의 텍스트를 한 줄로 표시 */
+        overflow: hidden; /* 넘치는 텍스트를 숨김 */
+        text-overflow: ellipsis; /* 넘치는 텍스트에 ... 표시 */
+    }
+
+    .nav-item .btn {
+        flex-shrink: 0; /* 버튼 크기가 줄어들지 않도록 설정 */
+        margin-left: 10px; /* 입력란과 버튼 사이의 여백 */
+    }
+</style>
+
+<nav
+        class="layout-navbar container-fluid navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
+        id="layout-navbar" style="margin-bottom: 10px;"
+        xmlns:th="http://www.thymeleaf.org">
+
+    <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
+        <!-- Search -->
+        <div class="navbar-nav align-items-center" style="width: 100%;">
+            <div class="nav-item d-flex align-items-center" style="width: 100%;">
+                <i class="bx bx-search fs-4 lh-0"></i>
+                <form id="memberSearchForm" action="/admin/memberSearch" class="d-flex align-items-center" method="get" style="width: 100%;">
+                    <input
+                            aria-label="Search..."
+                            class="form-control border-0 shadow-none"
+                            placeholder="Search member email"
+                            type="text"
+                            name="email"
+                    />
+                    <button class="btn btn-primary ms-2" type="submit">검색</button>
+                </form>
+            </div>
+        </div>
+        <!-- /Search -->
+    </div>
+</nav>
+
+<div class="card">
+    <h5 class="card-header">Members List</h5>
+
+    <div class="table-responsive text-nowrap">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>회원 번호</th>
+                <th>이름</th>
+                <th>이메일</th>
+                <th>회원등급</th>
+            </tr>
+            </thead>
+            <tbody class="table-border-bottom-0">
+            <tr th:each="member : ${memberList}">
+                <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong th:text="${member.id}">회원번호</strong>
+                </td>
+                <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong th:text="${member.name}">회원이름</strong>
+                </td>
+                <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong th:text="${member.email}">회원아이디(이메일)</strong></td>
+                <td><span class="badge bg-label-primary me-1" th:text="${member.grade_code}">Vip</span></td>
+                <td>
+                    <div class="dropdown">
+                        <button class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown" type="button">
+                            <i class="bx bx-dots-vertical-rounded"></i>
+                        </button>
+                    </div>
+                </td>
+                <td style="text-align: right; width: 50px;">
+                    <img alt="탈퇴 버튼" src="/images/delete.png"
+                         id="item-delete-btn"
+                         th:onclick="'removeUser(' + ${member.id} + ')'"
+                    />
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<!--/ Hoverable Table rows -->
+
+<!--sweetalert 사용 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script src="/personal-scripts/util.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#memberSearchForm').on('submit', function (e) {
+            e.preventDefault(); // 폼 기본 제출 동작 막기
+
+            var form = $(this);
+            var formData = form.serialize();
+
+            $.ajax({
+                type: 'POST',
+                url: form.attr('action'),
+                data: formData,
+                success: function (response) {
+                    $('.container-xxl').html(response); // 응답 HTML을 특정 컨테이너에 삽입
+                },
+                error: function (xhr) {
+                    Swal.fire('Error', 'There was an error processing your request.', 'error');
+                }
+            });
+        });
+    });
+
+    function removeUser(memberId) {
+        Swal.fire({
+            title: "회원 관리",
+            text: "정말 삭제하시겠습니까?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "네",
+            cancelButtonText: "아니오"
+        }).then((result) => {
+            if (result.isConfirmed) { // 확인
+                $.ajax({
+                    type: 'POST',
+                    url: '/admin/memberDelete',
+                    data: {
+                        memberId: memberId,
+                    },
+                    success: function(response) {
+                        swtAlertOne2("삭제 완료")
+                        $('.container-xxl').html(response);
+                    },
+                    error: function(xhr, status, error) {
+                    }
+                })
+            }
+        });
+    }
+</script>
+
+

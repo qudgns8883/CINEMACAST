@@ -1,0 +1,69 @@
+<article id="mypage_membership">
+    <header id="mypage_membership_header">
+        <div class="user_info">
+            <img alt="멤버십 등급 이미지" th:src="@{/images/grade/{image}.png(image=${myPageGrade})}">
+            <p>
+                <span th:text="${myPageMemberInfo.name}">user</span>님의 등급은 <b th:text="${myPageGrade}">green</b> 입니다
+            </p>
+        </div>
+    </header>
+    <!-- 멤버쉽 혜택 -->
+    <section>
+        <h5>멤버십 혜택</h5>
+        <table>
+            <tr>
+                <th></th>
+                <td>
+                    <img alt="블랙" src="/images/grade/BLACK.png">
+                    <p>블랙 회원</p>
+                </td>
+                <td>
+                    <img alt="레드" src="/images/grade/RED.png">
+                    <p>레드 회원</p>
+                </td>
+                <td>
+                    <img alt="블루" src="/images/grade/BLUE.png">
+                    <p>블루 회원</p>
+                </td>
+                <td>
+                    <img alt="그린" src="/images/grade/GREEN.png">
+                    <p>그린 회원</p>
+                </td>
+            </tr>
+            <tr>
+                <th>산정기준</th>
+                <td>최근 3달 간<br/> 영화 10회 이상 관람</td>
+                <td>최근 3달 간<br/> 영화 5회 이상 관람</td>
+                <td>최근 3달 간<br/> 영화 3회 이상 관람</td>
+                <td>일반회원<br/> <small style="font-size: 80%">가입과 동시에 부여</small></td>
+            </tr>
+            <tr>
+                <th>마일리지적립</th>
+                <td>실 결제금액의 <b>10%</b></td>
+                <td>실 결제금액의 <b>5%</b></td>
+                <td colspan="2">실 결제금액의 <b>3%</b></td>
+            </tr>
+            <tr>
+                <th>우수고객선물</th>
+                <td>연2회</td>
+                <td>연1회</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th>생일축하적립</th>
+                <td>15,000p</td>
+                <td>10,000p</td>
+                <td>5,000p</td>
+                <td></td>
+            </tr>
+            <tr>
+                <th>신규가입적립</th>
+                <td colspan="4">
+                    3,000p<br/>
+                    최초 1회 발행
+                </td>
+            </tr>
+        </table>
+    </section>
+</article>

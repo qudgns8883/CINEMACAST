@@ -1,0 +1,107 @@
+<div id="comment-list-container">
+    <div class="card">
+        <div class="comment-list-container">
+            <h5 class="card-header">Comments List</h5>
+            <div class="table-responsive text-nowrap">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>리뷰 번호</th>
+                        <th>영화 제목</th>
+                        <th>내용</th>
+                        <th>이메일</th>
+                        <th>작성일자</th>
+                        <th>평점</th>
+                        <th>삭제</th>
+                    </tr>
+                    </thead>
+                    <tbody class="table-border-bottom-0">
+                    <tr th:each="comment: ${commentList}">
+                        <td><strong th:text="${comment.cno}">리뷰 번호</strong></td>
+                        <td><a th:href="@{/movies/{id}(id=${comment.movieId})}" th:text="${comment.movieTitle}">영화
+                            제목</a>
+                        </td>
+                        <td><strong th:text="${comment.comment}">댓글내용</strong></td>
+                        <td th:text="${comment.memberEmail}">회원아이디(이메일)</td>
+                        <td th:text="${#temporals.format(comment.createDate, 'yy-MM-dd / HH:mm')}">작성일자</td>
+                        <td th:text="${comment.grade}">평점</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm delete-movie-btn" th:data-cno-id="${comment.cno}">삭제
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination controls -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link" href="#"
+                           th:onclick="loadCommentList([[${currentPage - 1}]]); return false;"
+                           aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item" th:each="page : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:classappend="${currentPage == page} ? 'active'">
+                        <a class="page-link" href="#" th:onclick="loadCommentList([[${page}]]); return false;"
+                           th:text="${page + 1}"></a>
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage == (totalPages - 1)} ? 'disabled'">
+                        <a class="page-link" href="#"
+                           th:onclick="loadCommentList([[${currentPage + 1}]]); return false;"
+                           aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+
+    import { deleteConfirm } from "/modules/alerts.js";
+    import { errorAlert } from "/modules/alerts.js";
+
+
+    $(document).ready(function() {
+        $(document).on('click', '.delete-movie-btn', function() {
+            const cno = $(this).data('cno-id');
+
+            deleteConfirm().then((confirmed) => {
+                if (confirmed) {
+                    $.ajax({
+                        url: '/movies/delete/' + cno,
+                        type: 'DELETE',
+                        success: function(result) {
+                            // 해결필요
+                            // location.reload();
+                        },
+                        error: function(err) {
+                            errorAlert('삭제 중 오류가 발생했습니다.');
+                        }
+                    });
+                }
+            });
+        });
+    });
+
+
+    function loadCommentList(page) {
+        $.ajax({
+            url: '/admin/commentList',
+            type: 'POST',
+            data: { page: page },
+            success: function(data) {
+                // 컨테이너에 결과 HTML 넣기
+                $('#comment-list-container').html(data);
+            },
+            error: function() {
+                errorAlert('영화 목록 로드 중 오류가 발생했습니다.');
+            }
+        });
+    }
+</script>

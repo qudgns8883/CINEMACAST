@@ -1,0 +1,170 @@
+<article id="mypage_order">
+    <!-- 주문내역 -->
+    <section>
+        <div class="order history">
+            <header style="margin-bottom: 1em">
+                <h5>스낵 주문 내역</h5>
+            </header>
+            <hr style="top:0; margin-bottom: 1em">
+            <section>
+                <article class="history_item" th:each="snackPayment : ${snackPaymentInfo}"
+                         th:unless="${snackPaymentInfo == null or snackPaymentInfo.isEmpty()}">
+                    <header>
+                        <h4 th:text="${#temporals.format(snackPayment.getRegDate(), 'yyyy-MM-dd')}">2024-05-22</h4>
+                    </header>
+                    <div class="history_data">
+                        <img th:alt="${snackPayment.getSnack().snack_alt}"
+                             th:src="@{/images/menu/{image}(image=${snackPayment.getSnack().snack_image})}">
+                        <div>
+                            <h4 th:text="'주문번호 : ' + ${snackPayment.getMerchantUid()}">
+                                주문번호 : </h4>
+                            <span class="snack_nm" th:text="${snackPayment.getProductName()}+' '">팝콘</span><span><small
+                                style="font-size: 14px" th:text="${snackPayment.getProductCount()}+개">3개</small> </span>
+                            <p th:text="${snackPayment.getTotalPrice()}+원">36,000원 </p>
+                        </div>
+                    </div>
+                    <div class="button_box" th:if="${snackPayment.getPaymentStatus() == '결제완료'}">
+                        <button type="button" class="detail_btn" id="order_detail" th:data-order-idx="${snackPayment.getId()}">구매상세</button>
+                        <button type="button" class="cancel_btn" id="order_cancel" th:data-order-merchantUid="${snackPayment.getMerchantUid()}" th:data-order-impUid="${snackPayment.getImpUid()}">주문취소</button>
+                    </div>
+                    <div class="button_box" th:unless="${snackPayment.getPaymentStatus() == '결제완료'}">
+                        <button type="button" style="width: 100%" class="detail_btn" id="order_cancel_detail" th:data-order-idx="${snackPayment.getId()}">구매상세</button>
+                    </div>
+                </article>
+                <article th:if="${snackPaymentInfo == null or snackPaymentInfo.isEmpty()}">
+                    <div class="history_none">
+                        <p class="snack_nm">구매하신 스낵이 없습니다.</p>
+                    </div>
+                </article>
+                <!-- 더보기 버튼 -->
+                <div id="moreContainer" style="text-align: center; margin-top: 15px;"
+                     th:if="${snackPaymentInfo.hasNext}">
+                    <button id="moreBtn" onclick="loadMore()"><img src="/images/under-arrow.png" alt="더보기 버튼"></button>
+                </div>
+
+                <!--sweetalert 사용 -->
+                <script src="/personal-scripts/util.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+                <script th:inline="javascript">
+                    $(document).ready(function() {
+                        let currentPage = 0; // 현재 페이지 번호
+
+                        window.loadMore = function() {
+                            currentPage++; // 다음 페이지로
+                            $.ajax({
+                                url: '/mypage/order/more?page=' + currentPage + '&size=5', // 페이지 정보 포함
+                                type: 'GET',
+                                success: function(data) {
+                                    // 데이터를 페이지에 추가하는 로직
+                                    let container = $('.history'); // 주문 내역을 추가할 컨테이너
+                                    data.content.forEach(snackPayment => {
+                                        let formattedDate = new Date(snackPayment.regDate).toISOString().split('T')[0]; // 'yyyy-MM-dd' 포맷으로 날짜 변환
+                                        let item = null;
+                                        if(snackPayment.paymentStatus == '결제완료') {
+                                            item = `
+                                                <article class="history_item">
+                                                    <header>
+                                                        <span>${formattedDate}</span>
+                                                    </header>
+                                                    <div class="history_data">
+                                                        <img alt="${snackPayment.snack.snack_alt}" src="/images/menu/${snackPayment.snack.snack_image}">
+                                                        <div>
+                                                            <h4>주문번호 : ${snackPayment.merchantUid}</h4>
+                                                                    <span class="snack_nm">${snackPayment.productName} </span>
+                                                                    <span><small style="font-size: 14px">${snackPayment.productCount}개</small></span>
+                                                                    <p>${snackPayment.totalPrice}원</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="button_box">
+                                                        <button type="button" class="detail_btn" id="order_detail" data-order-idx="${snackPayment.id}">구매상세</button>
+                                                        <button type="button" class="cancel_btn" id="order_cancel" data-order-merchantUid="${snackPayment.merchantUid}" data-order-impUid="${snackPayment.impUid}">주문취소</button>
+                                                    </div>
+                                                </article>`;
+                                        } else {
+                                            item = `
+                                                <article class="history_item">
+                                                        <h4>${snackPayment.getPaymentStatus}</h4>
+                                                        <span>${formattedDate}</span>
+                                                        </header>
+                                                    <div class="history_data">
+                                                        <img alt="${snackPayment.snack.snack_alt}" src="/images/menu/${snackPayment.snack.snack_image}">
+                                                        <div>
+                                                            <h4>주문번호 : ${snackPayment.merchantUid}</h4>
+                                                                                        <span class="snack_nm">${snackPayment.productName} </span>
+                                                                                        <span><small style="font-size: 14px">${snackPayment.productCount}개</small></span>
+                                                                                        <p>${snackPayment.totalPrice}원</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="button_box">
+                                                        <button type="button" style="width: 100%" class="detail_btn" id="order_cancel_detail" data-order-idx="${snackPayment.id}">구매상세</button>
+                                                    </div>
+                                                </article>`;
+                                        }
+
+                                        container.append(item);
+                                    });
+
+                                    // 다음 페이지가 없으면 더보기 버튼 숨김
+                                    if(data.content.length < 5) {
+                                        $('#moreContainer').hide();
+                                    }
+                                },
+                                error: function(error) {
+                                    console.log('Error:', error);
+                                }
+                            });
+                        }
+
+                        // 동적으로 생성된 버튼에 이벤트 리스너를 추가
+                        $(document).on('click', '#order_cancel', function() {
+                            const merchant_uid = $(this).data('order-merchantuid');
+                            const imp_uid = $(this).data('order-impuid');
+
+                            Swal.fire({
+                                title: "결제취소",
+                                text: "결제를 취소하시겠습니까?",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonColor: "#3085d6",
+                                cancelButtonColor: "#d33",
+                                confirmButtonText: "취소하기",
+                                cancelButtonText: "아니오"
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    $.ajax({
+                                        type: 'POST',
+                                        url: '/payment/paymentCancel',
+                                        data: {
+                                            merchant_uid: merchant_uid,
+                                            imp_uid: imp_uid
+                                        },
+                                        success: function(response_complete) {
+                                            if (response_complete.errorMsg !== "errorMsg") {
+                                                let params = new URLSearchParams();
+                                                params.append("imp_uid", response_complete.imp_uid);
+                                                window.location.href = '/payment/paymentCancelSuccessful?' + params.toString(); // 결제가 완료된 후 리디렉션할 페이지
+                                            } else {
+                                                swtAlertOne("죄송합니다. 다시 시도해주세요.");
+                                            }
+                                        },
+                                        error: function() {
+                                            swtAlertOne("서버 통신에 실패했습니다.");
+                                        }
+                                    });
+                                }
+                            });
+                        });
+
+                        // 동적으로 생성된 버튼에 이벤트 리스너를 추가
+                        $(document).on('click', '#order_detail, #order_cancel_detail', function() {
+                            const orderIdx = $(this).data('order-idx');
+                            $('#content').load('/mypage/order/detail?paymentId=' + orderIdx);
+                        });
+                    });
+                </script>
+            </section>
+        </div>
+    </section>
+</article>

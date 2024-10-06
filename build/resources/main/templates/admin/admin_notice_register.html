@@ -1,0 +1,60 @@
+<nav class="layout-navbar navbar navbar-expand-xl align-items-center bg-navbar-theme" id="layout-navbar" style="margin-bottom: 10px;">
+    <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+        <!-- Search -->
+        <div class="navbar-nav align-items-center">
+            <div class="nav-item d-flex align-items-center">
+                <i class="bx bx-search fs-4 lh-0"></i>
+                <h4>공지사항 등록하기</h4>
+            </div>
+        </div>
+        <!-- /Search -->
+    </div>
+</nav>
+<!-- / Navbar -->
+<!-- Basic Layout -->
+
+<div class="row">
+    <div class="col-xl">
+        <div class="card mb-4">
+            <div class="card-body">
+                <form id="noticeForm">
+                    <div class="mb-3">
+                        <label class="form-label" for="noticeTitle">공지사항 제목</label>
+                        <input class="form-control" id="noticeTitle" name="noticeTitle" placeholder="공지사항 제목을 입력해주세요."
+                               required type="text"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="noticeContent">공지사항 상세 설명</label>
+                        <input class="form-control" id="noticeContent" name="noticeContent"
+                               placeholder="공지사항 상세 설명을 입력해주세요." required type="text" />
+                    </div>
+                    <button class="btn btn-primary" type="submit">등록하기</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { SuccessAlert } from "/modules/alerts.js";
+    $(document).ready(function() {
+        $('#noticeForm').on('submit', function(event) {
+            event.preventDefault(); // 기본 폼 제출을 막음
+
+            $.ajax({
+                url: '/admin/noticeRegister',
+                method: 'POST',
+                data: $(this).serialize(),
+                success: function(response) {
+                    SuccessAlert("공지사항이 등록되었습니다.")
+                    // 성공 시 컨테이너에 공지사항 목록 로드
+                    $('.container-xxl').load('/admin/noticeList');
+                },
+                error: function() {
+                    // 에러 처리
+                    alert('폼 제출 중 오류가 발생했습니다.');
+                }
+            });
+        });
+    });
+</script>

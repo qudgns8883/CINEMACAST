@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns="http://www.w3.org/1999/html"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!-- header -->
+<th:block th:replace="fragment/header::header"></th:block>
+<body class="left-sidebar is-preload">
+<div id="page-wrapper">
+    <!-- Main -->
+    <div class="wrapper style1 mypage-wrapper">
+        <div class="container">
+            <div class="row gtr-200">
+                <div class="col-3 col-12-mobile" id="sidebar">
+                    <section>
+                        <header>
+                            <h3 class="main_btn" style="cursor: pointer">마이페이지</h3>
+                        </header>
+                        <div class="mypage_nav">
+                            <nav>
+                                <ul>
+                                    <li>
+                                        <a>예매관리</a>
+                                        <ul>
+                                            <li>
+                                                <a class="reservation_btn">예매내역 조회</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <a>주문관리</a>
+                                        <ul>
+                                            <li><a class="order_btn">주문내역 조회</a></li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <a>회원 혜택 및 활동</a>
+                                        <ul>
+                                            <li>
+                                                <a class="membership_btn">회원등급안내</a>
+                                            </li>
+                                            <li>
+                                                <a class="point_btn">포인트 현황</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <a>리뷰관리</a>
+                                        <ul>
+                                            <li><a class="review_btn">나의 리뷰</a></li>
+                                            <li><a class="favorite_btn">나의 찜목록</a></li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <a class="member_info_btn">회원정보</a>
+                                        <ul>
+                                            <li>
+                                                <a class="info_edit_btn">개인정보수정</a>
+                                            </li>
+                                            <li th:if="${formUser == 'formUser'}">
+                                                <a class="password_edit_btn">비밀번호수정</a>
+                                            </li>
+                                            <li>
+                                                <a class="cancel_btn">회원탈퇴</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </section>
+                </div>
+                <div class="col-9 col-12-mobile imp-mobile mypage-content" id="content">
+                    <!-- This is where the loaded content will appear -->
+                </div>
+            </div>
+            <!-- content -->
+        </div>
+    </div>
+    <!-- chatbot -->
+    <th:block th:replace="fragment/chatbot::chatbot"></th:block>
+    <!-- footer -->
+    <th:block th:replace="fragment/footer::footer"></th:block>
+</div>
+<script th:inline="javascript">
+    const memberId = [[${memberId}]];
+
+    $(document).ready(function() {
+        function setActiveClass(selector) {
+            $('.mypage_nav li li a').removeClass('clicked');
+            $(selector).addClass('clicked');
+        }
+
+        // 마이페이지 메인
+        $('.main_btn').on('click', function() {
+            $('#content').load('/mypage/main');
+            setActiveClass(this);
+        });
+
+        // 예매내역 조회 버튼 클릭 이벤트 설정
+        $('.reservation_btn').on('click', function() {
+            $('#content').load('/mypage/reservation');
+            setActiveClass(this);
+        });
+
+        // 주문내역조회 버튼 클릭 이벤트 설정
+        $('.order_btn').on('click', function() {
+            $('#content').load('/mypage/order');
+            setActiveClass(this);
+        });
+
+        // 회원등급안내 버튼 클릭 이벤트 설정
+        $('.membership_btn').on('click', function() {
+            $('#content').load('/mypage/membership');
+            setActiveClass(this);
+        });
+
+        // 포인트 현황 버튼 클릭 이벤트 설정
+        $('.point_btn').on('click', function() {
+            $('#content').load('/mypage/point');
+            setActiveClass(this);
+        });
+
+        // 나의리뷰 버튼 클릭 이벤트 설정
+        $('.review_btn').on('click', function() {
+            $('#content').load('/mypage/review');
+            setActiveClass(this);
+        });
+
+        // 나의찜목록 버튼 클릭 이벤트 설정
+        $('.favorite_btn').on('click', function() {
+            $('#content').load('/mypage/favorite');
+            setActiveClass(this);
+        });
+
+        // 개인정보수정 버튼 클릭 이벤트 설정
+        $('.info_edit_btn').on('click', function() {
+            $('#content').load('/mypage/infoEdit');
+            setActiveClass(this);
+        });
+
+        // 비밀번호수정 버튼 클릭 이벤트 설정
+        $('.password_edit_btn').on('click', function() {
+            $('#content').load('/mypage/passwordEdit');
+            setActiveClass(this);
+        });
+
+        // 회원탈퇴 버튼 클릭 이벤트 설정
+        $('.cancel_btn').on('click', function() {
+            setActiveClass(this);
+            Swal.fire({
+                title: "정말로 탈퇴하시겠습니까?",
+                text: "기존의 정보는 모두 복구불가합니다.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "네, 탈퇴하겠습니다."
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/mypage/memberDelete',
+                        data: {
+                            memberId: memberId
+                        },
+                        success: function() {
+                            // 회원탈퇴 처리 성공
+                            sessionStorage.removeItem("userInfo"); // session storage값 삭제
+                            window.location.href = "/";
+                        },
+                        error: function(xhr, status, error) {
+                            // 에러 처리 코드
+                            console.error("회원탈퇴 요청 중 에러 발생:", error);
+                        }
+                    });
+                }
+            });
+        });
+
+        // 페이지 로드 시 .main_btn 클릭 트리거
+        $('.main_btn').trigger('click');
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="chatbot">
+    <button class="chatbot-toggle">
+        <img src="/images/chatbot.png" alt="챗봇 이미지" />
+    </button>
+    <iframe id="chatbot-iframe" src="http://localhost:5004/webhook/chat?token=secret"></iframe>
+    <script>
+        const chatbotToggle = document.querySelector('.chatbot-toggle');
+        const iframe = document.getElementById('chatbot-iframe');
+
+        // Ensure iframe is initially hidden
+        iframe.style.display = 'none';
+
+        chatbotToggle.addEventListener('click', function() {
+            if(iframe.style.display === 'none') {
+                iframe.style.display = 'block';
+                chatbotToggle.textContent = 'close';
+            } else {
+                iframe.style.display = 'none';
+                chatbotToggle.textContent = ''; // 기존 텍스트 제거
+
+                // 이미지 생성
+                const img = document.createElement('img');
+                img.src = '/images/chatbot.png';
+                img.alt = '챗봇 이미지';
+                img.style.width = '40px';
+                img.style.height = 'auto';
+
+                // 버튼에 이미지 추가
+                chatbotToggle.appendChild(img);
+            }
+        });
+    </script>
+</th:block>
+</html>

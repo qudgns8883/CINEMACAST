@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html lang="en"
+      layout:decorate="~{layout/layout_total}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<body class="no-sidebar is-preload">
+<th:block layout:fragment="content">
+    <div id="page-wrapper">
+        <!-- Main -->
+        <div class="wrapper style1">
+            <div class="container notice_get">
+                <article class="special" id="main">
+                    <header>
+                        <h3>[[${notice.noticeTitle}]]</h3>
+                        <p>
+                            <img src="/images/views.png" alt="조회수 이미지" />
+                            <span>[[${notice.viewCount}]]</span></p>
+                    </header>
+                    <section class="contents">
+                        <p>
+                            [[${notice.noticeContent}]]
+                        </p>
+                    </section>
+                    <footer>
+                        <p>작성자: [[${notice.memberEmail}]]</p>
+                        <p>등록일: [[${#temporals.format(notice.regDate, 'yyyy-MM-dd')}]]</p>
+                    </footer>
+                </article>
+                <table class="default">
+                    <tr>
+                        <td>다음글</td>
+                        <td th:if="${nextNotice != null}">
+                            <a th:href="@{/notice_get/{id}(id=${nextNotice.noticeId})}" th:text="${nextNotice.noticeTitle}"></a>
+                        </td>
+                        <td th:if="${nextNotice == null}">다음글이 없습니다.</td>
+                    </tr>
+                    <tr>
+                        <td>이전글</td>
+                        <td th:if="${previousNotice != null}">
+                            <a th:href="@{/notice_get/{id}(id=${previousNotice.noticeId})}" th:text="${previousNotice.noticeTitle}"></a>
+                        </td>
+                        <td th:if="${previousNotice == null}">이전글이 없습니다.</td>
+                    </tr>
+                </table>
+                <button class="button" onclick="window.location.href='/notice/noticeList'">목록</button>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

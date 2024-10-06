@@ -1,0 +1,66 @@
+<style>
+    .delete-btn {
+        cursor: pointer;
+    }
+</style>
+
+<article id="mypage_review">
+    <header>
+        <h5>내가 작성한 리뷰</h5>
+
+    </header>
+    <!-- 댓글 목록 테이블 -->
+    <section th:unless="${#lists.isEmpty(comments)}">
+        <table>
+            <tr>
+                <th>날짜</th>
+                <th>영화명</th>
+                <th>내용</th>
+                <th>별점</th>
+                <th></th>
+            </tr>
+            <tr th:each="comment : ${comments}" th:id="'comment-' + ${comment.cno}">
+                <td th:text="${#temporals.format(comment.createDate, 'yyyy-MM-dd')}"></td>
+                <td><a th:href="@{'/movies/' + ${comment.movieId}}" th:text="${comment.movieTitle}"></a></td>
+                <td th:text="${comment.comment}"></td>
+                <td th:text="${comment.grade}"></td>
+                <td><a href="javascript:void(0);" class="delete-btn" th:data-comment-id="${comment.cno}">
+                    <img src="/images/delete.png" alt="삭제 버튼"/></a>
+                </td>
+            </tr>
+        </table>
+    </section>
+
+    <!-- 관람평이 없을 때 메시지 -->
+    <section class="info-none" th:if="${#lists.isEmpty(comments)}">
+        <p>아직 작성한 관람평이 없습니다.</p><p>관람하신 영화에 대한 관람평을 작성해보세요!</p>
+    </section>
+</article>
+<script type="module">
+    import { deleteConfirm } from "/modules/alerts.js";
+    $(document).on('click', '.delete-btn', function () {
+        const cno = $(this).data('comment-id');
+        deleteComment(cno);
+    });
+
+    function deleteComment(cno) {
+        deleteConfirm().then((confirmed) => {
+            if (confirmed) {
+                $.ajax({
+                    url: `/movies/delete/${cno}`,
+                    method: 'DELETE',
+                    success: function (result) {
+
+                        $('#comment-' + cno).remove();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("댓글 삭제 중 오류가 발생했습니다:", error);
+                        alert("댓글을 삭제하는 중 오류가 발생했습니다. 나중에 다시 시도해주세요.");
+                    }
+                });
+            }
+        }).catch((error) => {
+            console.error('Error confirming delete:', error);
+        });
+    }
+</script>
