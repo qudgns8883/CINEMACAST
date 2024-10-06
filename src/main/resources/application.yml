@@ -7,7 +7,7 @@ spring:
       green: green, common   # 'green' 프로파일을 활성화하면 'green', 'common' 활성화
 
 server:
-  env: blue  # 서버 환경을 'blue'로 설정
+  env: green  # 서버 환경을 'blue'로 설정
 
 ---
 
