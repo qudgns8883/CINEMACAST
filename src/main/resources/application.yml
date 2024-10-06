@@ -7,7 +7,7 @@ spring:
       green: green
 
 server:
-  env: blue  # 서버 환경을 'blue'로 설정
+  env: green  # 서버 환경을 'blue'로 설정
 
 ---
 
