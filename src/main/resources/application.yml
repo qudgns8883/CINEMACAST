@@ -7,7 +7,7 @@ spring:
       green: green
 
 server:
-  env: green  # 서버 환경을 'blue'로 설정
+  env: blue  # 서버 환경을 'blue'로 설정
 
 ---
 
@@ -27,7 +27,7 @@ serverName: local_server  # 서버의 이름을 'local_server'로 설정
 spring:
   config:
     activate:
-      on-profile: blue  # 'local' 프로파일이 활성화될 때 이 설정을 적용
+      on-profile: blue  # 'blue' 프로파일이 활성화될 때 이 설정을 적용
 
 server:
   port: 8080            # 서버가 리스닝할 포트 번호를 8080으로 설정
@@ -40,7 +40,7 @@ serverName: blue_server  # 서버의 이름을 'blue_server'로 설정
 spring:
   config:
     activate:
-      on-profile: green  # 'blue' 프로파일이 활성화될 때 이 설정을 적용
+      on-profile: green  # 'green' 프로파일이 활성화될 때 이 설정을 적용
 
 server:
   port: 8081            # 서버가 리스닝할 포트 번호를 8080으로 설정
