@@ -20,6 +20,7 @@ jobs:
         run: |
           rm -rf config/application.properties
           mkdir -p config
+          touch config/application.properties
           echo "${{ secrets.APPLICATION_PROPERTIES }}" | base64 --decode | tee config/application.properties
 
       - name: Verify application.properties
