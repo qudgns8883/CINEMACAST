@@ -86,8 +86,8 @@ jobs:
 
       - name: Verify application.properties
         run: |
-            sudo docker exec -it ${{ env.TARGET_UPSTREAM }} ls -l /app/application.properties
-            sudo docker exec -it ${{ env.TARGET_UPSTREAM }} cat /app/application.properties
+            sudo docker exec -it ${{ env.CURRENT_UPSTREAM }} ls -l /app/application.properties
+            sudo docker exec -it ${{ env.CURRENT_UPSTREAM }} cat /app/application.properties
 
       - name: Install MySQL Client
         uses: appleboy/ssh-action@master
