@@ -18,8 +18,8 @@ jobs:
 
       - name: Create application.properties
         run: |
-          rm -rf config/application.properties
-          mkdir -p config
+          rm -rf /home/ubuntu/config/application.properties
+          mkdir -p /home/ubuntu/config
           echo "${{ secrets.APPLICATION_PROPERTIES }}" | base64 --decode > /home/ubuntu/config/application.properties
 
       - name: Verify application.properties
