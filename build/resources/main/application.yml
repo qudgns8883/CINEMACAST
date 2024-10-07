@@ -2,9 +2,9 @@ spring:
   profiles:
     active: local
     group:
-      local: local
-      blue: blue
-      green: green
+      local: local, secret
+      blue: blue, secret
+      green: green, secret
 
 server:
   env: blue
