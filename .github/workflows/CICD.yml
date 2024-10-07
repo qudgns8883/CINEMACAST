@@ -20,6 +20,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Remove existing application.properties
+        run: rm -f src/main/resources/application.properties
+
+      - name: Create application.properties
+        run: echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/main/resources/application.properties
+
       - name: Build with Gradle  
         run: |
           chmod +x gradlew
@@ -68,18 +74,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
           script: |
-            echo "CURRENT_UPSTREAM: $CURRENT_UPSTREAM"
-            echo "CURRENT_PORT: $CURRENT_PORT"
-            echo "STOPPED_PORT: $STOPPED_PORT"
-            echo "TARGET_UPSTREAM: $TARGET_UPSTREAM"
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/live_server:latest
             sudo docker-compose -f docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d
-
-      - name: Debug Environment Variables
-        run: |
-          echo "Requesting URL: http://${{ secrets.LIVE_SERVER_IP }}/env"
-          echo "CURRENT_UPSTREAM=${{ env.CURRENT_UPSTREAM }}"
-          echo "STOPPED_PORT=${{ env.STOPPED_PORT }}"   
 
       - name: Install MySQL Client
         uses: appleboy/ssh-action@master

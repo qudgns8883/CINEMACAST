@@ -1,49 +1,49 @@
 spring:
   profiles:
-    active: local  # 현재 활성화된 프로파일을 'local'로 설정
-    group:         # 프로파일 그룹 정의
+    active: local
+    group:
       local: local
       blue: blue
       green: green
 
 server:
-  env: blue  # 서버 환경을 'blue'로 설정
+  env: blue
 
 ---
 
 spring:
   config:
     activate:
-      on-profile: local  # 'local' 프로파일이 활성화될 때 이 설정을 적용
+      on-profile: local
 
 server:
-  port: 8080            # 서버가 리스닝할 포트 번호를 8080으로 설정
-  serverAddress: localhost  # 서버의 주소를 localhost로 설정
+  port: 8080
+  serverAddress: localhost
 
-serverName: local_server  # 서버의 이름을 'local_server'로 설정
+serverName: local_server
 
 ---
 
 spring:
   config:
     activate:
-      on-profile: blue  # 'blue' 프로파일이 활성화될 때 이 설정을 적용
+      on-profile: blue
 
 server:
-  port: 8080            # 서버가 리스닝할 포트 번호를 8080으로 설정
-  serverAddress: 43.202.240.55  # 서버의 주소를 탄력적 IP로 설정
+  port: 8080
+  serverAddress: 43.202.240.55
 
-serverName: blue_server  # 서버의 이름을 'blue_server'로 설정
+serverName: blue_server
 
 ---
 
 spring:
   config:
     activate:
-      on-profile: green  # 'green' 프로파일이 활성화될 때 이 설정을 적용
+      on-profile: green
 
 server:
-  port: 8081            # 서버가 리스닝할 포트 번호를 8080으로 설정
-  serverAddress: 43.202.240.55  # 서버의 주소를 탄력적 IP로 설정
+  port: 8081
+  serverAddress: 43.202.240.55
 
-serverName: green_server  # 서버의 이름을 'green_server'로 설정
+serverName: green_server
