@@ -20,12 +20,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Remove existing application.properties
-        run: rm -f src/main/resources/application.properties
-
-      - name: Create application.properties
-        run: echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/main/resources/application.properties
-
       - name: Build with Gradle  
         run: |
           chmod +x gradlew
@@ -68,12 +62,17 @@ jobs:
           
       - name: Docker compose
         uses: appleboy/ssh-action@master
+        env:
+          APPLICATION_PROPERTIES: ${{ sercrets.APPLICATION_PROPERTIES }}
         with:
           username: ubuntu
           host: ${{ secrets.LIVE_SERVER_IP }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: APPLICATION_PROPERTIES
           script_stop: true
           script: |
+            rm -f src/main/resources/application.properties
+             echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/main/resources/application.properties
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/live_server:latest
             sudo docker-compose -f docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d
 

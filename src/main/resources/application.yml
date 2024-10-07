@@ -31,7 +31,7 @@ spring:
 
 server:
   port: 8080
-  serverAddress: 43.202.240.55
+  serverAddress: blue_server_IP
 
 serverName: blue_server
 
@@ -44,6 +44,6 @@ spring:
 
 server:
   port: 8081
-  serverAddress: 43.202.240.55
+  serverAddress: green_server_IP
 
 serverName: green_server
