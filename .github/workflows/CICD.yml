@@ -21,7 +21,7 @@ jobs:
           rm -rf config/application.properties
           mkdir -p config
           touch config/application.properties
-          echo "${{ secrets.APPLICATION_PROPERTIES }}" | base64 --decode | tee config/application.properties
+          echo "${{ secrets.APPLICATION_PROPERTIES }}" | base64 --decode > config/application.properties
 
       - name: Verify application.properties
         run: |
@@ -38,8 +38,6 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew clean build
-          ls -l config
-          cat config/application.properties
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -145,3 +143,5 @@ jobs:
           script: |
             sudo docker stop ${{ env.CURRENT_UPSTREAM }}
             sudo docker rm ${{ env.CURRENT_UPSTREAM }}
+
+---
