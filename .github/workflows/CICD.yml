@@ -60,5 +60,6 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            ls -l /config
+            ls -l /app
+            cat /app/application.properties
             sudo docker ps
