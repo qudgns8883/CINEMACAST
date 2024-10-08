@@ -52,3 +52,13 @@ jobs:
         run: docker build --no-cache --platform linux/amd64 -t ${{ secrets.DOCKERHUB_USERNAME }}/live_server .
       - name: Push Docker
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/live_server:latest
+
+      - name: SSH into server and check files
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.LIVE_SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            ls -l /home/ubuntu/config
+            docker ps
