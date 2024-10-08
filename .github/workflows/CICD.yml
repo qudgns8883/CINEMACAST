@@ -53,6 +53,14 @@ jobs:
       - name: Push Docker
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/live_server:latest
 
+      - name: Run Docker Container and Check Files
+        run: |
+          docker run -d --name temp_container ${{ secrets.DOCKERHUB_USERNAME }}/live_server:latest
+          docker exec temp_container ls -l /app
+          docker exec temp_container cat /app/application.properties
+          docker stop temp_container
+          docker rm temp_container
+
       - name: SSH into server and check files
         uses: appleboy/ssh-action@master
         with:
