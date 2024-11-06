@@ -25,7 +25,7 @@ public class ChatController {
 
     private final ChatService chatService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final ConcurrentHashMap<String, ConcurrentHashMap<String, Boolean>> chatRoomPresenceMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ConcurrentMap<String, Boolean>> chatRoomPresenceMap = new ConcurrentHashMap<>();
 
     @MessageMapping("/chat/updatePage")
     public void updatePage(@Payload PageUpdateDTO pageUpdateDTO) {
@@ -44,8 +44,8 @@ public class ChatController {
     }
     //채팅방 입장상태 반환
     @GetMapping("/chatRoomPresence")
-    public ResponseEntity<ConcurrentHashMap<String, Boolean>> getAdminPresence(@RequestParam String chatRoomId) {
-        ConcurrentHashMap<String, Boolean> userMap = chatRoomPresenceMap.getOrDefault(chatRoomId, new ConcurrentHashMap<>());
+    public ResponseEntity<Map<String, Boolean>> getAdminPresence(@RequestParam String chatRoomId) {
+        Map<String, Boolean> userMap = chatRoomPresenceMap.getOrDefault(chatRoomId, new ConcurrentHashMap<>());
         return ResponseEntity.ok(userMap);
     }
 
@@ -78,26 +78,28 @@ public class ChatController {
                 enterNotificationDTO
         );
     }
-        //메세지 처리
-        @MessageMapping("/chat/private")
-        public void sendPrivateMessage(@Payload MessageDTO messageDTO) {
+    //메세지 처리
+    @MessageMapping("/chat/private")
+    public void sendPrivateMessage(@Payload MessageDTO messageDTO) {
 
-            // inactive 상태일 때
-            if ("inactive".equals(messageDTO.getStatus())) {
-                chatService.updateChatRoomStatus(messageDTO.getChatRoomId(), "inactive");
-            } else if ("true".equals(messageDTO.getType())) {// 채팅방 입장한 경우
-                chatService.saveMessage(messageDTO);
-                chatService.updateLastReadTimestamp(messageDTO.getChatRoomId(), messageDTO.getRecipient()); // 마지막 읽은 시간 업데이트
-            } else { // active 상태일 때
-                chatService.saveMessage(messageDTO);
-            }
+        // inactive 상태일 때
+        if ("inactive".equals(messageDTO.getStatus())) {
+            chatService.updateChatRoomStatus(messageDTO.getChatRoomId(), "inactive");
+        } else if ("true".equals(messageDTO.getType())) {// 채팅방 입장한 경우
+            chatService.saveMessage(messageDTO);
+            chatService.updateLastReadTimestamp(messageDTO.getChatRoomId(), messageDTO.getRecipient()); // 마지막 읽은 시간 업데이트
+        } else { // active 상태일 때
+            chatService.saveMessage(messageDTO);
+        }
 
-            messagingTemplate.convertAndSendToUser(messageDTO.getRecipient(), "/queue/private/" + messageDTO.getChatRoomId(), messageDTO);
+        messagingTemplate.convertAndSendToUser(messageDTO.getRecipient(), "/queue/private/" + messageDTO.getChatRoomId(), messageDTO);
 
-            // 메시지 처리 후, 채팅 리스트 업데이트 요청
+        // 메시지 처리 후, 채팅 리스트 업데이트 요청
+        if (messageDTO.getPaging() != null)  {
             PageUpdateDTO pageUpdateDTO = messageDTO.getPaging();
             updateChatList(messageDTO.getSender(), messageDTO.getRecipient(), pageUpdateDTO.getActivePage(), pageUpdateDTO.getInactivePage(), 8);
         }
+    }
     //카테고리 선택 시 채팅룸 생성
     @PostMapping("/chat/createChatRoom")
     @ResponseBody

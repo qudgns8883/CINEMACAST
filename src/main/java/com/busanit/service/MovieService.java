@@ -16,8 +16,11 @@ import com.busanit.entity.movie.Genre;
 import com.busanit.entity.movie.MovieImage;
 import com.busanit.repository.GenreRepository;
 import com.busanit.util.GenreUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import okhttp3.OkHttpClient;
@@ -25,21 +28,29 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
 import static com.busanit.domain.movie.ActorDTO.convertToDto;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 @Service
 @RequiredArgsConstructor
@@ -47,11 +58,8 @@ import static com.busanit.domain.movie.ActorDTO.convertToDto;
 @Getter
 public class MovieService {
 
-    private final OkHttpClient client = new OkHttpClient.Builder()
-            .connectTimeout(120, TimeUnit.SECONDS)
-            .readTimeout(120, TimeUnit.SECONDS)
-            .writeTimeout(120, TimeUnit.SECONDS)
-            .build();
+    @Value("${TMDB.apiKey}")
+    private String apiKey;
     private final MovieRepository movieRepository;
     private final MovieDetailRepository movieDetailRepository;
     private final MovieStillCutRepository movieStillCutRepository;
@@ -60,37 +68,83 @@ public class MovieService {
     private final GenreRepository genreRepository;
     private final MovieBlacklistRepository movieBlacklistRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    @Value("${TMDB.apiKey}")
-    private String apiKey;
-    // 캐시를 사용하기 위한 데이터 구조
-    private List<MovieDTO> cachedVideoMovies = new ArrayList<>();
-    private List<MovieDTO> cachedAllMovies = new ArrayList<>();
-    private List<MovieDTO> cachedHotMovies = new ArrayList<>();
-    private List<MovieDTO> cachedActors = new ArrayList<>();
     private LocalDate lastFetchDate = LocalDate.now().minusDays(1);
-
-    // 상영작/상영예정작을 구분하기위한 로직중 개봉일자를 날짜타입에 맞추기위한 fomatter
+    private final RedisTemplate<String, Object> redisTemplate;
+    private List<MovieDTO> videoMovies;
+    private List<MovieDTO> allMovies;
+    private List<MovieDTO> hotMovies;
+    private List<MovieActor> actors;
+    private List<MovieDTO> StillCuts;
+    private List<MovieDTO> nowMovies;
+    private List<MovieDTO> upcomingMovies;
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    long timeout = 12;
+    TimeUnit unit = TimeUnit.HOURS;
 
-//    @Scheduled(fixedRate = 43200000) // 12시간마다 데이터 갱신
-//    public void fetchAndStoreMovies() throws IOException {
-//        fetchAndStoreMoviesNowPlaying();
-//        fetchAndStoreMoviesUpcoming();
-//        fetchAndStoreMovieRuntimeAndReleaseData();
-//        fetchAndStoreMovieStillCuts();
-//        fetchAndStoreCertificationData();
-//        fetchKoreanActors();
-//
-//        // 데이터 로컬 캐시 전략
-//        cachedActors = getActors();
-//        cachedVideoMovies = getVideoMovies();
-//        cachedAllMovies = getAll();
-//        cachedHotMovies = getHotMovies();
-//        lastFetchDate = LocalDate.now();
-//    }
+    private final Cache<String, List<MovieDTO>> movieCache = Caffeine.newBuilder()
+            .expireAfterWrite(Duration.ofHours(12))
+            .maximumSize(1000)
+            .recordStats()
+            .build();
+
+    private final OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(120, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)
+            .writeTimeout(120, TimeUnit.SECONDS)
+            .build();
+
+    @PostConstruct
+    public void loadCachedMovies() {
+        videoMovies = getCachedMovies("videoMovies");
+        allMovies = getCachedMovies("allMovies");
+        hotMovies = getCachedMovies("hotMovies");
+        actors = getCachedMoviesActor("actors");
+        nowMovies = getCachedMovies("nowMovies");
+        upcomingMovies = getCachedMovies("upcomingMovies");
+
+    }
+
+    // 12시간마다 데이터 갱신
+    @Scheduled(fixedRate = 43200000)
+    @Transactional
+    public void fetchAndStoreMovies() {
+        try {
+            fetchAndStoreMoviesNowPlaying();
+            fetchAndStoreMoviesUpcoming();
+            fetchAndStoreMovieRuntimeAndReleaseData();
+            fetchKoreanActors();
+            fetchAndStoreCertificationData();
+            fetchAndStoreMovieStillCuts();
+
+            updateCachedMovies();
+
+            long movieCount = movieRepository.count();
+            if (movieCount == 0) {
+                saveMoviesFromCacheToDatabase();
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to fetch and store movies", e);
+        }
+    }
+
+    private void updateCachedMovies() {
+        try {
+            redisTemplate.opsForValue().set("videoMovies", objectMapper.writeValueAsString(getVideoMovies()), timeout, unit);
+            redisTemplate.opsForValue().set("allMovies", objectMapper.writeValueAsString(getAll()), timeout, unit);
+            redisTemplate.opsForValue().set("hotMovies", objectMapper.writeValueAsString(getHotMovies()), timeout, unit);
+            redisTemplate.opsForValue().set("actors", objectMapper.writeValueAsString(getActors()), timeout, unit);
+            redisTemplate.opsForValue().set("nowMovies", objectMapper.writeValueAsString(getFilteredMovies(true)), timeout, unit);
+            redisTemplate.opsForValue().set("upcomingMovies", objectMapper.writeValueAsString(getFilteredMovies(false)), timeout, unit);
+
+            lastFetchDate = LocalDate.now();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     // 어드민페이지에서 영화를 삭제했을때 만약 API에서 주기적으로 받아와 서버에 저장하고있는 영화라면
-    private List<Long> getBlacklistedMovieIds() {
+    protected List<Long> getBlacklistedMovieIds() {
         return movieBlacklistRepository.findAll()
                 .stream()
                 .map(MovieBlacklist::getMovieId)
@@ -111,6 +165,7 @@ public class MovieService {
 
     // API에서 받아온 현재상영목록 리스트에서 모든 영화 ID 추출하는 메서드
     // (나중에 다른 api 데이터들도 영화id를 기준으로 데이터를가져오기때문에 씀)
+
     public List<Long> getAllMovieIds() {
         List<Movie> movies = movieRepository.findAll();
         // movieId가 10자리인 id를 필터링하는 이유는
@@ -126,16 +181,20 @@ public class MovieService {
 
     public void fetchAndStoreMoviesNowPlaying() throws IOException {
 
-        List<Long> blacklistedMovieIds = getBlacklistedMovieIds(); // 삭제된 영화 ID 목록 가져오기
-        List<Movie> modifiedMovies = getModifiedMovies();
-        int totalPages = fetchTotalPages();
+        List<MovieDTO> cachedMovies = getCachedMovies("nowMovies");
+        if (cachedMovies.isEmpty()) {
 
-        for (int page = 1; page <= totalPages; page++) {
-            String url = "https://api.themoviedb.org/3/movie/now_playing?language=ko-KR&page=" + page + "&api_key=" + apiKey + "&region=KR";
-            Request request = new Request.Builder().url(url).build();
-            try (Response response = client.newCall(request).execute()) {
-                String responseBody = response.body().string();
-                processResponse(responseBody, blacklistedMovieIds, modifiedMovies );
+            List<Long> blacklistedMovieIds = getBlacklistedMovieIds(); // 삭제된 영화 ID 목록 가져오기
+            List<Movie> modifiedMovies = getModifiedMovies();
+            int totalPages = fetchTotalPages();
+
+            for (int page = 1; page <= totalPages; page++) {
+                String url = "https://api.themoviedb.org/3/movie/now_playing?language=ko-KR&page=" + page + "&api_key=" + apiKey + "&region=KR";
+                Request request = new Request.Builder().url(url).build();
+                try (Response response = client.newCall(request).execute()) {
+                    String responseBody = response.body().string();
+                    processResponse(responseBody, blacklistedMovieIds, modifiedMovies);
+                }
             }
         }
     }
@@ -143,15 +202,19 @@ public class MovieService {
     // 상영예정작 DB에 넣기
     public void fetchAndStoreMoviesUpcoming() throws IOException {
 
-        List<Long> blacklistedMovieIds = getBlacklistedMovieIds();
-        List<Movie> modifiedMovies = getModifiedMovies();
+        List<MovieDTO> cachedMovies = getCachedMovies("upcomingMovies");
+        if (cachedMovies.isEmpty()) {
 
-        for (int page = 1; page <= 5; page++) {
-            String url = "https://api.themoviedb.org/3/movie/upcoming?language=ko-KR&page=" + page + "&api_key=" + apiKey + "&region=KR";
-            Request request = new Request.Builder().url(url).build();
-            try (Response response = client.newCall(request).execute()) {
-                String responseBody = response.body().string();
-                processResponse(responseBody, blacklistedMovieIds, modifiedMovies);
+            List<Long> blacklistedMovieIds = getBlacklistedMovieIds();
+            List<Movie> modifiedMovies = getModifiedMovies();
+
+            for (int page = 1; page <= 5; page++) {
+                String url = "https://api.themoviedb.org/3/movie/upcoming?language=ko-KR&page=" + page + "&api_key=" + apiKey + "&region=KR";
+                Request request = new Request.Builder().url(url).build();
+                try (Response response = client.newCall(request).execute()) {
+                    String responseBody = response.body().string();
+                    processResponse(responseBody, blacklistedMovieIds, modifiedMovies);
+                }
             }
         }
     }
@@ -172,7 +235,6 @@ public class MovieService {
     public String fetchMovieVideoKey(int movieId) throws IOException {
         // TMDB API URL을 포맷팅하여 생성합니다. 영화 ID와 API 키를 사용
         String url = String.format("https://api.themoviedb.org/3/movie/%d/videos?language=ko-KR&api_key=%s", movieId, apiKey);
-        // 요청을 생성
         Request request = new Request.Builder().url(url).build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -255,14 +317,15 @@ public class MovieService {
     }
 
     // Movie 객체를 가져오거나 새로 생성
-    private Movie getOrCreateMovie(MovieDTO movieDTO) {
+    protected Movie getOrCreateMovie(MovieDTO movieDTO) {
         return movieRepository.findById(movieDTO.getId()).orElse(new Movie());
     }
 
     // MovieDetail 객체를 가져오거나 새로 생성
-    private MovieDetail getOrCreateMovieDetail(Movie movie) {
+    protected MovieDetail getOrCreateMovieDetail(Movie movie) {
         MovieDetail movieDetail = movie.getMovieDetail();
-        if (movieDetail == null || movieDetailRepository.findById(movieDetail.getMovieDetailId()).isEmpty()) {
+
+        if (movieDetail == null || (movieDetail.getMovieDetailId() != null && movieDetailRepository.findById(movieDetail.getMovieDetailId()).isEmpty())) {
             movieDetail = new MovieDetail();
         }
         return movieDetail;
@@ -316,14 +379,16 @@ public class MovieService {
     }
 
     public void fetchAndStoreMovieStillCuts() throws IOException {
-
-        List<Long> movieIds = getAllMovieIds();
-        for (Long movieId : movieIds) {
-            String url = "https://api.themoviedb.org/3/movie/" + movieId + "/images?include_image_language=kr%2Cnull&language=KR&api_key=" + apiKey;
-            Request request = new Request.Builder().url(url).build();
-            try (Response response = client.newCall(request).execute()) {
-                String responseBody = response.body().string();
-                processStillCutsResponse(responseBody);
+        List<MovieDTO> cachedMovies = getCachedMovies("allMovies");
+        if (cachedMovies.isEmpty()) {
+            List<Long> movieIds = getAllMovieIds();
+            for (Long movieId : movieIds) {
+                String url = "https://api.themoviedb.org/3/movie/" + movieId + "/images?include_image_language=kr%2Cnull&language=KR&api_key=" + apiKey;
+                Request request = new Request.Builder().url(url).build();
+                try (Response response = client.newCall(request).execute()) {
+                    String responseBody = response.body().string();
+                    processStillCutsResponse(responseBody);
+                }
             }
         }
     }
@@ -343,15 +408,23 @@ public class MovieService {
         }
     }
 
-    private void saveSingleStillCut(Long movieId, String filePath) {
+    private void saveSingleStillCut(Long movieId, String filePath) throws JsonProcessingException {
         if (movieStillCutRepository.existsByMovies_movieIdAndStillCuts(movieId, filePath)) {
-            return; // 스틸컷 중복체크
+            return;
         }
         Movie movie = movieRepository.findById(movieId).orElseThrow(() -> new IllegalArgumentException("Invalid movieId: " + movieId));
         MovieStillCut movieStillCut = new MovieStillCut();
-        movieStillCut.setStillCuts(filePath); // 여기서는 각각의 filePath를 별도로 저장합니다.
+        movieStillCut.setStillCuts(filePath);
         movie.addStillCut(movieStillCut);
         movieStillCutRepository.save(movieStillCut);
+        // Movie 객체를 Redis에 저장
+        saveMovieToRedis(movie);
+    }
+
+    // Movie 객체를 Redis에 저장하는 메서드
+    private void saveMovieToRedis(Movie movie) throws JsonProcessingException {
+        MovieDTO movieDTO = MovieDTO.convertToDTO(movie);
+        redisTemplate.opsForValue().set("Movie:" + movie.getMovieId(), objectMapper.writeValueAsString(movieDTO), timeout, unit);
     }
 
     private boolean hasImage(List<MovieImage> images, String posterPath, String backdropPath) {
@@ -379,7 +452,6 @@ public class MovieService {
             movieImage.setPosterPath(posterPath);
             movieImage.setBackdropPath(backdropPath);
             existingMovie.addImage(movieImage);
-            // 수정된 movie를 저장
         }
     }
 
@@ -396,35 +468,43 @@ public class MovieService {
         }
     }
 
-    // 영화 배우 가져오기(한국어로 된거만)
     public void fetchKoreanActors() throws IOException {
-        List<MovieActor> koreanActors = new ArrayList<>();
+        List<MovieActor> cachedActors = getCachedMoviesActor("actors");
 
-        for (int page = 1; page <= 50; page++) {
-            String url = "https://api.themoviedb.org/3/person/popular?language=ko-KR&page=" + page + "&api_key=" + apiKey;
-            Request request = new Request.Builder().url(url).build();
+        if (cachedActors.isEmpty()) {
+            List<MovieActor> koreanActors = new ArrayList<>();
 
-            try (Response response = client.newCall(request).execute()) {
-                String responseBody = response.body().string();
-                JsonNode results = getResultsFromResponse(responseBody);
+            for (int page = 1; page <= 50; page++) {
+                String url = "https://api.themoviedb.org/3/person/popular?language=ko-KR&page=" + page + "&api_key=" + apiKey;
+                Request request = new Request.Builder().url(url).build();
 
-                if (results.isArray()) {
-                    for (JsonNode node : results) {
-                        String name = node.get("name").asText();
-                        if (isKoreanName(name)) {
-                            int gender = node.get("gender").asInt();
-                            String profilePath = node.get("profile_path").asText(null);
-                            // 중복 체크
-                            if (!isActorExists(name)) {
-                                // 데이터베이스에 존재하지 않는 경우에만 추가
-                                MovieActor actor = new MovieActor(name, getGender(gender), profilePath);
-                                koreanActors.add(actor);
-                                movieActorRepository.save(actor);  // Save to database
+                try (Response response = client.newCall(request).execute()) {
+                    String responseBody = response.body().string();
+                    JsonNode results = getResultsFromResponse(responseBody);
+
+                    if (results.isArray()) {
+                        for (JsonNode node : results) {
+                            String name = node.get("name").asText();
+                            if (isKoreanName(name)) {
+                                int gender = node.get("gender").asInt();
+                                String profilePath = node.get("profile_path").asText(null);
+                                Long id = node.get("id").asLong();
+
+                                // 중복 체크
+                                if (!isActorExists(name)) {
+                                    // 데이터베이스에 존재하지 않는 경우에만 추가
+                                    MovieActor actor = new MovieActor(name, getGender(gender), profilePath);
+                                    koreanActors.add(actor);
+
+                                    // 데이터베이스에 저장
+                                    movieActorRepository.save(actor);
+                                }
                             }
                         }
                     }
                 }
             }
+            redisTemplate.opsForValue().set("actors", objectMapper.writeValueAsString(koreanActors), timeout, unit);
         }
     }
 
@@ -480,9 +560,13 @@ public class MovieService {
 
     //전체 영화
     public List<MovieDTO> getAll() {
-        List<Movie> movieList = movieRepository.findAll();
-        return movieList.stream().map(MovieDTO::convertToDTO)
-                .collect(Collectors.toList());
+        List<MovieDTO> cachedMovies = getCachedMovies("allMovies");
+        if (cachedMovies.isEmpty()) {
+            List<Movie> movieList = movieRepository.findAll();
+            return movieList.stream().map(MovieDTO::convertToDTO)
+                    .collect(Collectors.toList());
+        }
+        return cachedMovies;
     }
 
     // 영화 전체보기
@@ -513,39 +597,62 @@ public class MovieService {
         Page<Movie> movieList = movieRepository.findAllByReleaseDateBetween(startDateString, endDateString, pageable);
         return movieList.map(MovieDTO::convertToDTO);
     }
+
     // 상영예정작 전체목록보기
     public Page<MovieDTO> getUpcomingMoviesPagingAndSorting(int page, int size) {
         return getMoviesPagingAndSorting(page, size, true);
     }
+
     // 상영작 전체목록보기
     public Page<MovieDTO> getCurrentMoviesPagingAndSorting(int page, int size) {
         return getMoviesPagingAndSorting(page, size, false);
     }
+
     // 인기순 영화 정렬
     public List<MovieDTO> getHotMovies() {
-        List<Movie> movieList = movieRepository.findAllByOrderByMovieDetailPopularityDesc();
-        return movieList.stream().map(MovieDTO::convertToDTO)
-                .collect(Collectors.toList());
+        List<MovieDTO> cachedMovies = getCachedMovies("hotMovies");
+
+        if (cachedMovies.isEmpty()) {
+            List<Movie> movieList = movieRepository.findAllByOrderByMovieDetailPopularityDesc();
+            cachedMovies = movieList.stream().map(MovieDTO::convertToDTO)
+                    .collect(Collectors.toList());
+        }
+
+        return cachedMovies;
     }
+
     //인기순 영화 중 영상이 존재하고 배경포스터가 존재하는것들
     public List<MovieDTO> getVideoMovies() {
-        Pageable topFive = PageRequest.of(0, 5);
-        List<Movie> movieList = movieRepository.findByVideoTrueAndBackdropPathNotNullOrderByPopularityDesc(topFive);
-
-        return movieList.stream().map(MovieDTO::convertToDTO)
-                .collect(Collectors.toList());
+        // 캐시에서 데이터 가져오기
+        List<MovieDTO> cachedMovies = getCachedMovies("videoMovies");
+        if (cachedMovies.isEmpty()) {
+            Pageable topFive = PageRequest.of(0, 5);
+            List<Movie> movieList = movieRepository.findByVideoTrueAndBackdropPathNotNullOrderByPopularityDesc(topFive);
+            return movieList.stream().map(MovieDTO::convertToDTO)
+                    .collect(Collectors.toList());
+        }
+        return cachedMovies;
     }
+
     // 영화 상세보기
     public List<MovieDTO> getMovieDetailInfo(Long movieId) {
         Optional<Movie> movieList = movieRepository.findById(movieId);
         return movieList.stream().map(MovieDTO::convertToDTO)
                 .collect(Collectors.toList());
     }
+
     public List<MovieDTO> getActors() {
-        List<MovieActor> movieActors = movieActorRepository.findAll();
-        return movieActors.stream().map(MovieDTO::convertActorToDTO)
+        List<MovieActor> cachedActors = getCachedMoviesActor("actors");
+        if (cachedActors.isEmpty()) {
+            List<MovieActor> movieActors = movieActorRepository.findAll();
+            return movieActors.stream().map(MovieDTO::convertActorToDTO)
+                    .collect(Collectors.toList());
+        }
+        return cachedActors.stream()
+                .map(MovieDTO::convertActorToDTO)
                 .collect(Collectors.toList());
     }
+
     //로그인되어있는 유저 email받아오기
     public String getUserEmail() {
         String userEmail = null;
@@ -557,9 +664,17 @@ public class MovieService {
         }
         return userEmail;
     }
+
     //모든 영화에서 개봉일자가 4개월 전/후 로 필터링 하는 함수
     //매개변수의 boolean 값으로 4개월 전으로 나눌지 4개월 후로 나눌지 선택할수있음!
-    public List<MovieDTO> getFilteredMovies(List<MovieDTO> allMovies, boolean isUpcoming) {
+    public List<MovieDTO> getFilteredMovies(boolean isUpcoming) {
+
+        //모든 영화
+        List<MovieDTO> allMovies = getCachedMovies("allMovies");
+        if (allMovies == null) {
+            allMovies = new ArrayList<>();
+        }
+
         LocalDate referenceDate = LocalDate.now();
         LocalDate startDate;
         LocalDate endDate;
@@ -584,11 +699,13 @@ public class MovieService {
                 .collect(Collectors.toList());
     }
     // 검색기능
+
     public List<MovieDTO> searchMovies(String query) {
         List<Movie> searchResults = movieRepository.findByTitleContaining(query);
         return searchResults.stream().map(MovieDTO::convertToDTO)
                 .collect(Collectors.toList());
     }
+
     // 페이징된  !!!모든영화!!!  무비리스트
     public List<MovieDTO> getMoviesWithPaging(int page, int pageSize) {
         // JPA 페이징 처리를 위한 Pageable 객체 생성
@@ -663,7 +780,6 @@ public class MovieService {
         // 장르 업데이트
         List<Genre> updatedGenres = new ArrayList<>();
         for (String genreStr : genres) {
-            // 데이터베이스에서 해당 장르를 찾거나 새로 생성합니다.
             Genre genre = genreRepository.findByGenreName(genreStr)
                     .orElseGet(() -> {
                         Genre newGenre = new Genre();
@@ -695,7 +811,7 @@ public class MovieService {
         // 포스터 이미지와 백드롭 이미지 업데이트
         MovieImage movieImage = new MovieImage();
 
-        if(registeredPoster != null && registeredBackdrop != null) {
+        if (registeredPoster != null && registeredBackdrop != null) {
             movieImage.setPosterPath(registeredPoster);
             movieImage.setBackdropPath(registeredBackdrop);
         } else {
@@ -711,14 +827,6 @@ public class MovieService {
         updateCachedMovies();
     }
 
-    // 캐시 업데이트 메서드
-    private void updateCachedMovies() {
-        // 데이터 로컬 캐시 전략 업데이트
-        cachedVideoMovies = getVideoMovies();
-        cachedAllMovies = getAll();
-        cachedHotMovies = getHotMovies();
-        cachedActors = getActors();
-    }
 
     // 영화 등록 관련 로직
     public List<String> saveStillCutImages(List<MultipartFile> registeredStillCut, String uploadDirectory, String stillCutRelativeUploadDir) throws IOException {
@@ -819,5 +927,100 @@ public class MovieService {
                 .title(movie.getTitle())
                 .posterPath(movie.getImages().get(0).getPosterPath())
                 .build();
+    }
+
+    public void saveMoviesFromCacheToDatabase() {
+        List<MovieDTO> allMovies = getCachedMovies("allMovies");
+        if (!allMovies.isEmpty()) {
+
+            for (MovieDTO movieDTO : allMovies) {
+                List<MovieDTO> movies = getMovieFromRedis(movieDTO.getId());
+
+                if (!movies.isEmpty()) {
+
+                    MovieDetail movieDetail = movieDetailRepository.findById(movies.get(0).getId()).orElse(new MovieDetail());
+                    Movie movie = getOrCreateMovie(movieDTO);
+                    movie.setMovieId(movieDTO.getId());
+                    movie.setTitle(movieDTO.getTitle());
+                    movie.setOverview(movieDTO.getOverview());
+
+                    movieDetail.setPopularity(movies.get(0).getPopularity());
+                    movieDetail.setReleaseDate(movies.get(0).getReleaseDate());
+                    movieDetail.setCertification(movies.get(0).getCertifications());
+                    movieDetail.setRuntime(movies.get(0).getRuntime());
+                    movieDetail.setVideo(movies.get(0).getVideo());
+                    movie.setMovieDetail(movieDetail);
+
+                    List<String> stillCutPaths = movies.get(0).getStillCutPaths();
+
+                    for (String path : stillCutPaths) {
+                        MovieStillCut movieStillCut = new MovieStillCut();
+                        movieStillCut.setStillCuts(path);
+                        movie.addStillCut(movieStillCut);
+                    }
+
+                    List<String> genres = movies.get(0).getGenres();
+                    for (String genre : genres) {
+                        Genre addGenre = genreRepository.findByGenreName(genre).orElse(null);
+
+                        if (addGenre == null) {
+                            addGenre = new Genre();
+                            addGenre.setGenreName(genre);
+                            genreRepository.save(addGenre);
+                        }
+                        movie.addGenre(addGenre);
+                    }
+                    String backdropPath = movies.get(0).getBackdropPath();
+                    String posterPath = movies.get(0).getPosterPath();
+
+                    MovieImage movieImage = new MovieImage();
+                    movieImage.setPosterPath(posterPath);
+                    movieImage.setBackdropPath(backdropPath);
+                    movie.addImage(movieImage);
+
+                    movieRepository.save(movie);
+                }
+            }
+            movieActorRepository.saveAll(actors);
+        }
+    }
+
+    public List<MovieDTO> getCachedMovies(String key) {
+        Object cachedData = redisTemplate.opsForValue().get(key);
+        if (cachedData != null) {
+            try {
+                return objectMapper.readValue((String) cachedData, new TypeReference<>() {
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    public List<MovieDTO> getMovieFromRedis(Long movieId) {
+        Object cachedData = redisTemplate.opsForValue().get("Movie:" + movieId);
+        if (cachedData != null) {
+            try {
+                MovieDTO movieDTO = objectMapper.readValue((String) cachedData, MovieDTO.class);
+                return Collections.singletonList(movieDTO);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    public List<MovieActor> getCachedMoviesActor(String key) {
+        Object cachedData = redisTemplate.opsForValue().get(key);
+        if (cachedData != null) {
+            try {
+                return objectMapper.readValue((String) cachedData, new TypeReference<>() {
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return Collections.emptyList();
     }
 }

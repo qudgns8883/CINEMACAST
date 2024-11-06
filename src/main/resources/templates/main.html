@@ -11,210 +11,210 @@
 </head>
 <body>
 <th:block layout:fragment="content">
-<div id="page-wrapper">
+    <div id="page-wrapper">
 
-    <!-- Header -->
-    <div id="header">
-        <div class="overlay"></div>
-        <h1 class="logo"><a href="/">CINEMACAST</a></h1>
-        <!-- Inner -->
-        <div class="inner">
-            <header>
-                <h2><a id="movie_title">Movie Title</a></h2>
-                <hr />
-                <p id="movie_overview">Another fine freebie by HTML5 UP</p>
-            </header>
-            <footer>
-                <a class="button circled reservation_btn">예매</a>
-            </footer>
-        </div>
-        <!-- info -->
-        <div id="info" th:data-username="${#authentication.name}">
-            <ul>
-                <li sec:authorize="isAnonymous()">
-                    <a href="/member/new">회원가입</a>
-                </li>
-                <li sec:authorize="isAnonymous()">
-                    <a href="/member/login">로그인</a>
-                </li>
-                <li sec:authorize="isAuthenticated()">
-                    <a href="/member/logout" id="logoutLink">로그아웃</a>
-                </li>
-                <li sec:authorize="hasRole('USER')">
-                    <a th:href="@{/mypage/}" th:text="'마이페이지'"></a>
-                </li>
-                <li sec:authorize="hasRole('ADMIN')">
-                    <a th:href="@{/admin/adminMain}" th:text="'관리자페이지'"></a>
-                </li>
-                <li><a href="/payment/cartList">장바구니</a></li>
-                <li class="chat-alarm" sec:authorize="isAuthenticated()">
-                    <img id="chatImage" class="chat-img" src="/images/alarm.png" alt="1:1채팅 메시지" />
-                    <div id="unreadCount" style="display: none;">
-                        0
-                    </div>
-                </li>
-            </ul>
-        </div>
-
-        <!-- Nav -->
-        <nav id="nav">
-            <ul>
-                <li>
-                    <a href="#">영화</a>
-                    <ul>
-                        <li><a href="/allMovies">영화 전체보기</a></li>
-                        <li><a href="/nowMovies">현재 상영작</a></li>
-                        <li><a href="/comingMovies">상영 예정작</a></li>
-                    </ul>
-                </li>
-                <li>
-                    <a href="/reservation/screeningSchedule">예매</a>
-                </li>
-                <li><a href="/snack/snackList">스낵 스토어</a></li>
-                <li><a href="/event/eventList">이벤트</a></li>
-                <li><a href="/notice/noticeList">공지사항</a></li>
-            </ul>
-        </nav>
-
-        <div id="img_btn">
-            <button class="btn clicked">01</button>
-            <button class="btn">02</button>
-            <button class="btn">03</button>
-            <button class="btn">04</button>
-            <button class="btn">05</button>
-        </div>
-
-    </div>
-
-    <!-- Banner -->
-    <section id="banner">
-        <header>
-            <form id="searchForm" method="get" action="/search" class="search-form">
-                <input class="search-input" type="text" name="query" placeholder="Search Movies..." required />
-                <button type="submit">
-                    <img src="/images/magnifier2.png" alt="검색 버튼"/>
-                </button>
-            </form>
-        </header>
-    </section>
-
-<!--    &lt;!&ndash; Now Playing &ndash;&gt;-->
-<!--    <section class="carousel">-->
-<!--        <div class="section_title">-->
-<!--            <h3>현재 상영작</h3>-->
-<!--            <p><a href="/nowMovies">더보기</a></p>-->
-<!--        </div>-->
-<!--        <div class="reel">-->
-<!--            <article th:each="movie, iterStat : ${allMovies}"-->
-<!--                     th:if="${iterStat.index < 10}">-->
-<!--                <a th:href="@{'/movies/' + ${movie.id}}" class="image featured">-->
-<!--                    <img th:if="${#strings.length(movie.id) == 10}"-->
-<!--                         th:src="@{|/${movie.posterPath}|}"-->
-<!--                         alt="배경 사진" width="150" height="300"-->
-<!--                         style="border-top-left-radius: 15px; border-top-right-radius: 15px;"/>-->
-<!--                    <img th:if="${movie.posterPath != null && #strings.length(movie.id) != 10}"-->
-<!--                         th:src="@{'https://image.tmdb.org/t/p/w780' + ${movie.posterPath}}"-->
-<!--                         alt="배경 사진" width="150" height="300"-->
-<!--                         style="border-top-left-radius: 15px; border-top-right-radius: 15px;"/>-->
-<!--                    <img th:if="${movie.posterPath == 'null' && #strings.length(movie.id) != 10}"-->
-<!--                         th:src="@{/images/img_not_ready.png}"-->
-<!--                    alt="이미지 준비 중" width="150" height="300"-->
-<!--                    style="border-top-left-radius: 15px; border-top-right-radius: 15px;"/>-->
-<!--                </a>-->
-<!--                <div class="overlay-rank">-->
-<!--                    <h1 th:text="${iterStat.index + 1} + '.'"></h1>-->
-<!--                </div>-->
-<!--                <header>-->
-<!--                    <h4>-->
-<!--                        <a th:href="@{'/movies/' + ${movie.id}}">-->
-<!--                            <span th:utext="${#strings.length(movie.title) &gt; 10 ? #strings.substring(movie.title, 0, 10) + '...' : movie.title}">...</span>-->
-<!--                        </a>-->
-<!--                    </h4>-->
-<!--                    <p><img src="/images/clock.png" alt="clock"/><span th:text="${movie.runtime}">runtime</span></p>-->
-<!--                </header>-->
-<!--                <div class="button_box">-->
-<!--                    <button class="reservation_btn button"><a th:href="@{'/reservation/screeningSchedule/' + ${movie.id}}">예매하기</a></button>-->
-<!--                    <button class="get_btn button"><a th:href="@{'/movies/' + ${movie.id}}">상세보기</a></button>-->
-<!--                </div>-->
-<!--            </article>-->
-<!--        </div>-->
-<!--    </section>-->
-<!---->
-
-<!--    &lt;!&ndash; Comming Soon &ndash;&gt;-->
-<!--    <section class="carousel">-->
-<!--        <div class="section_title">-->
-<!--            <h3>상영예정작</h3>-->
-<!--            <p><a href="/comingMovies">더보기</a></p>-->
-<!--        </div>-->
-<!--        <div class="reel">-->
-<!--            <article th:each="movie, iterStat : ${upcomingMovies}" th:if="${iterStat.index < 10}">-->
-<!--                <a th:href="@{'/upcoming/' + ${movie.id}}"  class="image featured">-->
-<!--                    <img th:if="${#strings.length(movie.id) == 10}"-->
-<!--                         th:src="@{|/${movie.posterPath}|}"-->
-<!--                         alt="배경 사진" width="150" height="300"-->
-<!--                         style="border-top-left-radius: 15px; border-top-right-radius: 15px;"/>-->
-<!--                    <img th:if="${movie.posterPath != 'null' && #strings.length(movie.id) != 10}"-->
-<!--                         th:src="@{'https://image.tmdb.org/t/p/w780' + ${movie.posterPath}}"-->
-<!--                         alt="배경 사진" width="150" height="300"-->
-<!--                         style="border-top-left-radius: 15px; border-top-right-radius: 15px;"/>-->
-<!--                    <img th:if="${movie.posterPath == 'null' && #strings.length(movie.id) != 10}"-->
-<!--                         th:src="@{/images/img_not_ready.png}"-->
-<!--                         alt="이미지 준비 중" width="150" height="300"-->
-<!--                         style="border-top-left-radius: 15px; border-top-right-radius: 15px;"/>-->
-<!--                </a>-->
-<!--                 <header>-->
-<!--                     <h4>-->
-<!--                         <a th:href="@{'/upcoming/' + ${movie.id}}" >-->
-<!--                             <span th:utext="${#strings.length(movie.title) &gt; 10 ? #strings.substring(movie.title, 0, 10) + '...' : movie.title}">...</span>-->
-<!--                         </a>-->
-<!--                     </h4>-->
-<!--                    <p><img src="/images/calendar.png" alt="clock"/> <span th:text="${movie.releaseDate}">개봉날짜</span></p>-->
-<!--                </header>-->
-<!--                <div class="button_box">-->
-<!--                    <button class="reservation_btn button"><a th:href="@{'/reservation/screeningSchedule/' + ${movie.id}}">예매하기</a></button>-->
-<!--                    <button class="get_btn button"><a th:href="@{'/movies/' + ${movie.id}}">상세보기</a></button>-->
-<!--                </div>-->
-<!--            </article>-->
-<!--        </div>-->
-<!--    </section>-->
-<!--    &lt;!&ndash; Features &ndash;&gt;-->
-    <div class="wrapper style1">
-
-        <section id="features" class="container special">
-            <header>
-                <h3>스낵 스토어</h3>
-                <p>달콤한 맛과 바삭한 식감이 어우러진 팝콘 한 컵, 영화의 재미를 더 높여줄 거예요.<br />
-                    지금 바로 팝콘을 주문하고, 당신의 영화관 체험을 더욱 완벽하게 즐겨보세요!</p>
-<!--                <p class="more_btn" th:if="${snackList.totalElements > 0}"><a href="/snack/snackList">더보기</a></p>-->
-            </header>
-            <div class="custom-grid">
-<!--                <article class="custom-col special" th:each="snack : ${snackList}" th:if="${snackList.totalElements > 0}">-->
-<!--                    <a class="image featured" th:href="@{/snack/detail(id=${snack.id})}">-->
-<!--                        &lt;!&ndash; localhost:8080/snack/detail?id=1 &ndash;&gt;-->
-<!--                        <img class="featured-img" th:alt="${snack.snack_alt}" th:src="@{/images/menu/{image}(image=${snack.snack_image})}"/>-->
-<!--                    </a>-->
-<!--                    <header>-->
-<!--                        <h4><a th:href="@{/snack/detail(id=${snack.id})}" th:text="${snack.snack_nm}"></a></h4>-->
-<!--                    </header>-->
-<!--                    <p th:text="${snack.snack_price} + '원'"></p>-->
-<!--                </article>-->
+        <!-- Header -->
+        <div id="header">
+            <div class="overlay"></div>
+            <h1 class="logo"><a href="/">CINEMACAST</a></h1>
+            <!-- Inner -->
+            <div class="inner">
+                <header>
+                    <h2><a id="movie_title">Movie Title</a></h2>
+                    <hr />
+                    <p id="movie_overview">Another fine freebie by HTML5 UP</p>
+                </header>
+                <footer>
+                    <a class="button circled reservation_btn">예매</a>
+                </footer>
             </div>
-<!--            <div style="text-align: center" th:unless="${snackList.totalElements > 0}">-->
-<!--                <h4 style="margin-top:4em;">상품을 준비중 입니다.</h4>-->
-<!--            </div>-->
+            <!-- info -->
+            <div id="info" th:data-username="${#authentication.name}">
+                <ul>
+                    <li sec:authorize="isAnonymous()">
+                        <a href="/member/new">회원가입</a>
+                    </li>
+                    <li sec:authorize="isAnonymous()">
+                        <a href="/member/login">로그인</a>
+                    </li>
+                    <li sec:authorize="isAuthenticated()">
+                        <a href="/member/logout" id="logoutLink">로그아웃</a>
+                    </li>
+                    <li sec:authorize="hasRole('USER')">
+                        <a th:href="@{/mypage/}" th:text="'마이페이지'"></a>
+                    </li>
+                    <li sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin/adminMain}" th:text="'관리자페이지'"></a>
+                    </li>
+                    <li><a href="/payment/cartList">장바구니</a></li>
+                    <li class="chat-alarm" sec:authorize="isAuthenticated()">
+                        <img id="chatImage" class="chat-img" src="/images/alarm.png" alt="1:1채팅 메시지" />
+                        <div id="unreadCount" style="display: none;">
+                            0
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Nav -->
+            <nav id="nav">
+                <ul>
+                    <li>
+                        <a href="#">영화</a>
+                        <ul>
+                            <li><a href="/allMovies">영화 전체보기</a></li>
+                            <li><a href="/nowMovies">현재 상영작</a></li>
+                            <li><a href="/comingMovies">상영 예정작</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="/reservation/screeningSchedule">예매</a>
+                    </li>
+                    <li><a href="/snack/snackList">스낵 스토어</a></li>
+                    <li><a href="/event/eventList">이벤트</a></li>
+                    <li><a href="/notice/noticeList">공지사항</a></li>
+                </ul>
+            </nav>
+
+            <div id="img_btn">
+                <button class="btn clicked">01</button>
+                <button class="btn">02</button>
+                <button class="btn">03</button>
+                <button class="btn">04</button>
+                <button class="btn">05</button>
+            </div>
+
+        </div>
+
+        <!-- Banner -->
+        <section id="banner">
+            <header>
+                <form id="searchForm" method="get" action="/search" class="search-form">
+                    <input class="search-input" type="text" name="query" placeholder="Search Movies..." required />
+                    <button type="submit">
+                        <img src="/images/magnifier2.png" alt="검색 버튼"/>
+                    </button>
+                </form>
+            </header>
         </section>
+
+        <!-- Now Playing -->
+        <section class="carousel">
+            <div class="section_title">
+                <h3>현재 상영작</h3>
+                <p><a href="/nowMovies">더보기</a></p>
+            </div>
+            <div class="reel">
+                <article th:each="movie, iterStat : ${nowMovies}"
+                         th:if="${iterStat.index < 10}">
+                    <a th:href="@{'/movies/' + ${movie.id}}" class="image featured">
+                        <img th:if="${#strings.length(movie.id) == 10}"
+                             th:src="@{|/${movie.posterPath}|}"
+                             alt="배경 사진" width="150" height="300"
+                             style="border-top-left-radius: 15px; border-top-right-radius: 15px;"/>
+                        <img th:if="${movie.posterPath != null && #strings.length(movie.id) != 10}"
+                             th:src="@{'https://image.tmdb.org/t/p/w780' + ${movie.posterPath}}"
+                             alt="배경 사진" width="150" height="300"
+                             style="border-top-left-radius: 15px; border-top-right-radius: 15px;"/>
+                        <img th:if="${movie.posterPath == 'null' && #strings.length(movie.id) != 10}"
+                             th:src="@{/images/img_not_ready.png}"
+                             alt="이미지 준비 중" width="150" height="300"
+                             style="border-top-left-radius: 15px; border-top-right-radius: 15px;"/>
+                    </a>
+                    <div class="overlay-rank">
+                        <h1 th:text="${iterStat.index + 1} + '.'"></h1>
+                    </div>
+                    <header>
+                        <h4>
+                            <a th:href="@{'/movies/' + ${movie.id}}">
+                                <span th:utext="${#strings.length(movie.title) &gt; 10 ? #strings.substring(movie.title, 0, 10) + '...' : movie.title}">...</span>
+                            </a>
+                        </h4>
+                        <p><img src="/images/clock.png" alt="clock"/><span th:text="${movie.runtime}">runtime</span></p>
+                    </header>
+                    <div class="button_box">
+                        <button class="reservation_btn button"><a th:href="@{'/reservation/screeningSchedule/' + ${movie.id}}">예매하기</a></button>
+                        <button class="get_btn button"><a th:href="@{'/movies/' + ${movie.id}}">상세보기</a></button>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+
+        <!-- Comming Soon -->
+        <section class="carousel">
+            <div class="section_title">
+                <h3>상영예정작</h3>
+                <p><a href="/comingMovies">더보기</a></p>
+            </div>
+            <div class="reel">
+                <article th:each="movie, iterStat : ${upcomingMovies}" th:if="${iterStat.index < 10}">
+                    <a th:href="@{'/upcoming/' + ${movie.id}}"  class="image featured">
+                        <img th:if="${#strings.length(movie.id) == 10}"
+                             th:src="@{|/${movie.posterPath}|}"
+                             alt="배경 사진" width="150" height="300"
+                             style="border-top-left-radius: 15px; border-top-right-radius: 15px;"/>
+                        <img th:if="${movie.posterPath != 'null' && #strings.length(movie.id) != 10}"
+                             th:src="@{'https://image.tmdb.org/t/p/w780' + ${movie.posterPath}}"
+                             alt="배경 사진" width="150" height="300"
+                             style="border-top-left-radius: 15px; border-top-right-radius: 15px;"/>
+                        <img th:if="${movie.posterPath == 'null' && #strings.length(movie.id) != 10}"
+                             th:src="@{/images/img_not_ready.png}"
+                             alt="이미지 준비 중" width="150" height="300"
+                             style="border-top-left-radius: 15px; border-top-right-radius: 15px;"/>
+                    </a>
+                    <header>
+                        <h4>
+                            <a th:href="@{'/upcoming/' + ${movie.id}}" >
+                                <span th:utext="${#strings.length(movie.title) &gt; 10 ? #strings.substring(movie.title, 0, 10) + '...' : movie.title}">...</span>
+                            </a>
+                        </h4>
+                        <p><img src="/images/calendar.png" alt="clock"/> <span th:text="${movie.releaseDate}">개봉날짜</span></p>
+                    </header>
+                    <div class="button_box">
+                        <button class="reservation_btn button"><a th:href="@{'/reservation/screeningSchedule/' + ${movie.id}}">예매하기</a></button>
+                        <button class="get_btn button"><a th:href="@{'/movies/' + ${movie.id}}">상세보기</a></button>
+                    </div>
+                </article>
+            </div>
+        </section>
+        <!-- Features -->
+        <div class="wrapper style1">
+
+            <section id="features" class="container special">
+                <header>
+                    <h3>스낵 스토어</h3>
+                    <p>달콤한 맛과 바삭한 식감이 어우러진 팝콘 한 컵, 영화의 재미를 더 높여줄 거예요.<br />
+                        지금 바로 팝콘을 주문하고, 당신의 영화관 체험을 더욱 완벽하게 즐겨보세요!</p>
+                    <p class="more_btn" th:if="${snackList.totalElements > 0}"><a href="/snack/snackList">더보기</a></p>
+                </header>
+                <div class="custom-grid">
+                    <article class="custom-col special" th:each="snack : ${snackList}" th:if="${snackList.totalElements > 0}">
+                        <a class="image featured" th:href="@{/snack/detail(id=${snack.id})}">
+                            <!-- localhost:8080/snack/detail?id=1 -->
+                            <img class="featured-img" th:alt="${snack.snack_alt}" th:src="@{/images/menu/{image}(image=${snack.snack_image})}"/>
+                        </a>
+                        <header>
+                            <h4><a th:href="@{/snack/detail(id=${snack.id})}" th:text="${snack.snack_nm}"></a></h4>
+                        </header>
+                        <p th:text="${snack.snack_price} + '원'"></p>
+                    </article>
+                </div>
+                <div style="text-align: center" th:unless="${snackList.totalElements > 0}">
+                    <h4 style="margin-top:4em;">상품을 준비중 입니다.</h4>
+                </div>
+            </section>
+        </div>
     </div>
-</div>
 
     <div class="modal fade video-modal" id="videoModal" tabindex="-1" role="dialog" aria-labelledby="videoModalLabel" aria-hidden="true" style="display: none">
         <div class="modal-dialog modal-xl modal-dialog-centered custom-modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="videoModalLabel"></h5>
-<!--                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
-<!--                        <span aria-hidden="true">&times;</span>-->
-<!--                    </button>-->
+                    <!--                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
+                    <!--                        <span aria-hidden="true">&times;</span>-->
+                    <!--                    </button>-->
                 </div>
                 <div class="modal-body">
                     <iframe id="videoFrame" class="video-frame" width="100%" height="800px" src="" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

@@ -32,8 +32,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MemberService implements UserDetailsService { /* UserDetailsService 로그인을 위한 처리 */
     private final MemberRepository memberRepository;
-    private final ChatRoomRepository chatRoomRepository;
-    private final PointService pointService;
     private final PaymentService paymentService;
     private final JavaMailSender mailSender;
 

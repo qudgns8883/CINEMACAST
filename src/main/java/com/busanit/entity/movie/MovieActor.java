@@ -1,5 +1,7 @@
 package com.busanit.entity.movie;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,19 +13,20 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MovieActor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long actorId;
 
-    // 배우 이름
+    @JsonProperty("name")
     private String actorName;
 
-    // 배우 성별
+    @JsonProperty("gender")
     private String actorGender;
 
-    // 배우 사진
+    @JsonProperty("profile_path")
     private String actorProfilePic;
 
 
