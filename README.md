@@ -79,6 +79,9 @@
 * 이벤트, 공지사항 CRUD작업
 * 1대 1 채팅, 문의 답변
 
+## 아키텍쳐  
+<img width="649" height="389" alt="image" src="https://github.com/user-attachments/assets/5ddc1bba-4a8d-4b32-8abc-580c39da42cc" />
+
 ## 사용 방법
 
 ### 1:1 채팅 문의 시 로그인 방법
