@@ -31,16 +31,16 @@
 <table>
   <tr>
     <td width="50%">
-    <img width="1749" height="939" alt="image" src="https://github.com/user-attachments/assets/48677a94-18fd-4d32-9f67-dc0ff7cb6955" />
-    <img width="1230" height="708" alt="image" src="https://github.com/user-attachments/assets/6f5c4bdb-4374-4d66-8ba5-4af10361e004" />
-    <img width="1903" height="944" alt="image" src="https://github.com/user-attachments/assets/4365826c-b03b-4ed2-a01d-40046ebc4205" />
+      <img width="1749" height="939" alt="image" src="https://github.com/user-attachments/assets/48677a94-18fd-4d32-9f67-dc0ff7cb6955" />
+      <img width="1230" height="708" alt="image" src="https://github.com/user-attachments/assets/6f5c4bdb-4374-4d66-8ba5-4af10361e004" />
+      <img width="1903" height="944" alt="image" src="https://github.com/user-attachments/assets/4365826c-b03b-4ed2-a01d-40046ebc4205" />
     </td>
     <td width="50%">
       <p><b>메인화면</b></p>
       <ul>
-        <li>TMDB API 데이터 수집 : 스케줄러를 사용하여 12시간마다 TMDB API 8개를 호출하여 최신 영화 데이터를 업데이트</li>
-        <li>Redis를 활용한 캐싱: 외부 API에서 수집한 데이터는 Redis에 저장하여 캐싱을 구현하여 불필요한 쿼리 발생을 방지, 메인페이지 로딩속도 개선</li>
-        <li>직관적인 정보 제공: 인기 영화, 현재 상영작, 상영 예정작 등 다양한 영화 정보 제공</li>
+        <li>**TMDB API 데이터 수집**: 스케줄러를 사용해 12시간마다 TMDB API 8개를 호출하여 최신 영화 데이터를 업데이트합니다.</li>
+        <li>**Redis를 활용한 캐싱**: 외부 API 데이터를 Redis에 저장하여 불필요한 쿼리 발생을 방지하고, 메인 페이지 로딩 속도를 개선합니다.</li>
+        <li>**직관적인 정보 제공**: 인기 영화, 현재 상영작, 상영 예정작 등 다양한 영화 정보를 한눈에 제공합니다.</li>
       </ul>
     </td>
   </tr>
