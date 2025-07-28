@@ -146,15 +146,14 @@
 
 ### 마이페이지
 <div style="display: flex; gap: 10px;">
- <img width="1164" alt="image" src="https://github.com/user-attachments/assets/8c74877f-f837-4fdb-beef-48f01a1d188c" />
- <img width="869" alt="image" src="https://github.com/user-attachments/assets/eb770d2f-d29f-416f-954a-59a16dceffd8" />
+ <img width="330" alt="image" src="https://github.com/user-attachments/assets/8c74877f-f837-4fdb-beef-48f01a1d188c" />
+ <img width="330" alt="image" src="https://github.com/user-attachments/assets/eb770d2f-d29f-416f-954a-59a16dceffd8" />
 </div>
+
 <div style="display: flex; gap: 10px;">
- <img width="731" alt="image" src="https://github.com/user-attachments/assets/132dd6aa-0da6-4c65-82a1-cf7c257a0202" />
-  <img width="535" alt="image" src="https://github.com/user-attachments/assets/241a1b45-66b3-432a-90ae-d13b712e9bc0" />
+ <img width="330" alt="image" src="https://github.com/user-attachments/assets/132dd6aa-0da6-4c65-82a1-cf7c257a0202" />
+  <img width="330" alt="image" src="https://github.com/user-attachments/assets/241a1b45-66b3-432a-90ae-d13b712e9bc0" />
 </div>
-
-
 
 ### 관리자 페이지
 * 아이디: 1@admin.com 비밀번호: adminpw
