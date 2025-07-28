@@ -14,33 +14,14 @@
 
 ## ⚙️ 사용된 기술
 - Java, Spring Boot, Spring Data JPA, Spring Security, MySQL
-- CSS3, HTML5, BOOTSTRAP, JAVASCRIPT, JQUERY
+- CSS3, HTML5, BOOTSTRAP, JQUERY, Thymeleaf
 
 <br/>
 
 ## 💡 담당기능
 
-### 로그인
-* DB값 검증
-* ID찾기, PW찾기
-* 로그인 시 쿠키(Cookie) 및 세션(Session) 생성
-  
-### 회원가입
-* ID 중복 체크
-
 ### 마이페이지
-* 예매관리
-* 주문관리
-* 회원 혜택 및 활동
 * 리뷰관리
-* 회원정보 
-
-### 영화 예매
-* 영화 선택(날짜 지정)
-* 영화관(도시명/동명/지점 선택) 상영 시간표
-* 좌석 선택
-* 결제 페이지
-* 예매 완료
 
 ### 메인 페이지
 * Youtube API 연동
@@ -57,9 +38,6 @@
 * 영화 관람평 작성 및 평점
 * 찜목록
 * 카카오톡 공유하기
-
-### 매점 페이지
-* 스낵 및 음료 구매
 
 ### 이벤트, 공지사항
 * 글 작성, 읽기, 수정, 삭제(CRUD)
