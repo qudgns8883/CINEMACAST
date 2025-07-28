@@ -6,23 +6,19 @@
 ## 📆 개발 기간
 * 24.05.13일 ~ 24.07.04일
 
-### 👨‍👩‍👦 프로젝트 구성원 - 5명
+### 👨‍👩‍👦 프로젝트 구성원 - 4명
 - **팀장**: 김소연 - 회원가입, 로그인, 관리자, 결제 페이지 개발
 - **팀원1**: 조혜령 - 기획서 작성, 퍼블리싱, 좌석 선택 및 상영시간표 구현
 - **팀원2**: 김우영 - TMDB.API를 이용한 영화 정보 페이지 개발
 - **팀원3**: 이병훈 - TMDB.API를 이용한 영화 정보 페이지 및 고객센터 구현
 
 ## ⚙️ 사용된 기술
-- **Java**: 서버 사이드 로직 구현
-- **Spring Boot**: 애플리케이션의 빠른 개발을 위한 프레임워크
-- **Spring Data JPA**: 데이터베이스와의 원활한 상호작용을 위한 ORM
-- **Spring Security**: 안전한 인증 및 권한 관리를 위한 보안 프레임워크
-- **MySQL**: 데이터 저장을 위한 관계형 데이터베이스
-- **CSS3, HTML5, BOOTSTRAP, JAVASCRIPT, JQUERY**: 프론트엔드 개발
+- Java, Spring Boot, Spring Data JPA, Spring Security, MySQL
+- CSS3, HTML5, BOOTSTRAP, JAVASCRIPT, JQUERY
 
 <br/>
 
-## 💡 주요 기능
+## 💡 담당기능
 
 ### 로그인
 * DB값 검증
