@@ -62,6 +62,7 @@
   <tr>
     <td width="50%">
       <img width="721" height="771" alt="image" src="https://github.com/user-attachments/assets/45b6d20d-58ca-4a76-9cd6-5d0ef55b8ecc" />
+      <img width="327" height="343" alt="image" src="https://github.com/user-attachments/assets/8a220f2b-1b25-4e03-baa4-af6e8610795e" />
     </td>
     <td width="50%">
       <p><b>영화에 대한 기본정보 제공</b></p>
