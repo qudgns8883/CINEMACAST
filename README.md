@@ -94,8 +94,6 @@
   </tr>
 </table>
 
-<img width="405" height="450" alt="image" src="https://github.com/user-attachments/assets/70b8a66c-6fae-4d99-aa76-ff1cc7122551" />
-
 
 ### 이벤트, 공지사항
 <table>
@@ -119,15 +117,24 @@
     <td width="50%">
       <img width="1016" height="602" alt="image" src="https://github.com/user-attachments/assets/6d805bbc-c7f9-47e3-bfdc-042c2c588d5a" />
       <img width="235" height="37" alt="image" src="https://github.com/user-attachments/assets/ed61ae34-59dc-4614-ad1f-ada159d30333" />
-      <img width="582" height="413" alt="image" src="https://github.com/user-attachments/assets/6abbffd8-d490-41ca-9eb1-b79d13ce3a89" />
-      <img width="986" height="938" alt="image" src="https://github.com/user-attachments/assets/5e9ced3c-8a1b-4571-bf89-b8ee4cd0928f" />
-      <img width="969" height="597" alt="image" src="https://github.com/user-attachments/assets/28d9e76c-97f4-402c-bf36-e59bb68c3948" />
     </td>
     <td width="50%">
       <p><b>1:1 채팅문의</b></p>
       <ul>
         <li>웹소켓을 활용해 실시간 채팅기능과 안 읽은 메세지 수 표시 기능 구현</li>
       </ul>
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td width="50%">
+      <img width="582" height="413" alt="image" src="https://github.com/user-attachments/assets/6abbffd8-d490-41ca-9eb1-b79d13ce3a89" />
+      <img width="986" height="938" alt="image" src="https://github.com/user-attachments/assets/5e9ced3c-8a1b-4571-bf89-b8ee4cd0928f" />
+      <img width="969" height="597" alt="image" src="https://github.com/user-attachments/assets/28d9e76c-97f4-402c-bf36-e59bb68c3948" />
+    </td>
+    <td width="50%">
       <p><b>문의하기</b></p>
       <ul>
         <li>Naver SMTP를 활용해 문의 내용을 관리자메일로 전송</li>
