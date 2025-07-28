@@ -67,16 +67,35 @@
       <img width="721" height="771" alt="image" src="https://github.com/user-attachments/assets/45b6d20d-58ca-4a76-9cd6-5d0ef55b8ecc" />
     </td>
     <td width="50%">
-      <p><b>상세 페이지</b></p>
+      <p><b>영화에 대한 기본정보 제공</b></p>
       <ul>
-        <li>영화에 대한 기본정보 제공</li>
-        <li>Redis를 활용한 캐싱: 외부 API 데이터를 Redis에 저장하여 불필요한 쿼리 발생을 방지하고, 메인 페이지 로딩 속도를 개선합니다.</li>
-        <li>직관적인 정보 제공: 인기 영화, 현재 상영작, 상영 예정작 등 다양한 영화 정보를 한눈에 제공합니다.</li>
+        <li>제목, 개봉일자, 관람등급, 줄거리, 스틸컷, 상영시간, 장르 등</li>
+      </ul>
+      <p><b>찜하기</b></p>
+      <ul>
+        <li>찜 클릭 시 [마이페이지] - [나의 찜목록]추가</li>
+      </ul>
+      <p><b>공유하기</b></p>
+      <ul>
+        <li>카카오톡 API를 연동하여 현재 보고 있는 영화의 정보를 친구들에게 간편하게 공유</li>
       </ul>
     </td>
   </tr>
 </table>
-
+<table>
+  <tr>
+    <td width="50%">
+      <img width="1169" height="232" alt="image" src="https://github.com/user-attachments/assets/7fdd1aa6-8014-4313-aabf-bff85f2617d1" />
+     <img width="723" height="110" alt="image" src="https://github.com/user-attachments/assets/c6b42464-32b8-4082-b964-70f4814c62f8" />
+    </td>
+    <td width="50%">
+      <p><b>리액션과 관람평</b></p>
+      <ul>
+        <li>관람한 영화에 한해서 1회 작성 가능</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
 
 
