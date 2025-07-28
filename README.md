@@ -46,15 +46,11 @@
   </tr>
 </table>
 
-* Youtube API 연동
-* 메인 포스터(영화) 이미지 슬라이드(CSS)
-* 영화 검색
-
 ### 영화 차트
 <div style="display: flex; gap: 10px;">
-  <img width="340" alt="image1" src="https://github.com/user-attachments/assets/a300a663-6041-498e-9b77-8d51efa9785b" />
-  <img width="340" alt="image2" src="https://github.com/user-attachments/assets/707d0516-b9b6-4bc6-80f0-8e970fa19443" />
-  <img width="340" alt="image3" src="https://github.com/user-attachments/assets/85bb55be-de4a-45fd-b5f9-e28c412bb20c" />
+  <img width="335" alt="image1" src="https://github.com/user-attachments/assets/a300a663-6041-498e-9b77-8d51efa9785b" />
+  <img width="335" alt="image2" src="https://github.com/user-attachments/assets/707d0516-b9b6-4bc6-80f0-8e970fa19443" />
+  <img width="335" alt="image3" src="https://github.com/user-attachments/assets/85bb55be-de4a-45fd-b5f9-e28c412bb20c" />
 </div>
 
 ### 영화 상세 페이지
