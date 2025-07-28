@@ -118,6 +118,7 @@
     <td width="50%">
       <img width="1016" height="602" alt="image" src="https://github.com/user-attachments/assets/6d805bbc-c7f9-47e3-bfdc-042c2c588d5a" />
       <img width="235" height="37" alt="image" src="https://github.com/user-attachments/assets/ed61ae34-59dc-4614-ad1f-ada159d30333" />
+       <img width="582" height="413" alt="image" src="https://github.com/user-attachments/assets/6abbffd8-d490-41ca-9eb1-b79d13ce3a89" />
     </td>
     <td width="50%">
       <p><b>1:1 채팅문의</b></p>
@@ -131,7 +132,6 @@
 <table>
   <tr>
     <td width="50%">
-      <img width="582" height="413" alt="image" src="https://github.com/user-attachments/assets/6abbffd8-d490-41ca-9eb1-b79d13ce3a89" />
       <img width="986" height="938" alt="image" src="https://github.com/user-attachments/assets/5e9ced3c-8a1b-4571-bf89-b8ee4cd0928f" />
       <img width="969" height="597" alt="image" src="https://github.com/user-attachments/assets/28d9e76c-97f4-402c-bf36-e59bb68c3948" />
     </td>
