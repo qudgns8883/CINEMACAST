@@ -25,6 +25,7 @@
 ## 💡 담당기능
 
 ## 어드민 
+---
 ### 메인 페이지
 <table>
   <tr>
@@ -50,6 +51,7 @@
   </tr>
 </table>
 
+---
         
 ### 영화 차트
 <div style="display: flex; gap: 10px;">
@@ -57,6 +59,8 @@
   <img width="330" alt="image2" src="https://github.com/user-attachments/assets/707d0516-b9b6-4bc6-80f0-8e970fa19443" />
   <img width="330" alt="image3" src="https://github.com/user-attachments/assets/85bb55be-de4a-45fd-b5f9-e28c412bb20c" />
 </div>
+
+---
 
 ### 영화 상세 페이지
 <table>
@@ -96,6 +100,7 @@
   </tr>
 </table>
 
+---
 
 ### 고객센터
 
@@ -106,8 +111,10 @@
 
 <img width="500" height="500" alt="image" src="https://github.com/user-attachments/assets/5e9ced3c-8a1b-4571-bf89-b8ee4cd0928f" />
 <img width="500" height="500" alt="image" src="https://github.com/user-attachments/assets/28d9e76c-97f4-402c-bf36-e59bb68c3948" />
+
 * 문의하기 : Naver SMTP를 활용해 문의 내용을 관리자메일로 전송
 
+  ---
 
 ### 마이페이지
 <div style="display: flex; gap: 10px;">
@@ -120,7 +127,11 @@
   <img width="330" alt="image" src="https://github.com/user-attachments/assets/241a1b45-66b3-432a-90ae-d13b712e9bc0" />
 </div>
 
+---
+
 ## 관리자 페이지
+
+---
 리뷰관리
 이벤트, 공지등록
 이메일 문의
