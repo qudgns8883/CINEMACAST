@@ -15,7 +15,7 @@
 ## ⚙️ 사용된 기술
 - Java, Spring Boot, Spring Data JPA, Spring Security, MySQL
 - CSS3, HTML5, BOOTSTRAP, JQUERY, Thymeleaf
-- CI/CD/DevOps Tools: GitHub Actions, Docker, Docker Compose, Nginx, (AWS EC2, AWS RDS)
+- CI/CD/DevOps Tools: GitHub Actions, Docker, Docker Compose, Nginx, AWS EC2
 
 <br/>
 
