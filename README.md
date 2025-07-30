@@ -19,7 +19,7 @@
 
 <br/>
 
-![2025-07-3011-22-23online-video-cutter com-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/40c8ffc8-d752-417a-9b14-cd4372c38bb5)
+
 
 
 ### ERD
@@ -107,8 +107,7 @@
 
 ### 고객센터
 
-<img width="300" height="50" alt="image" src="https://github.com/user-attachments/assets/ed61ae34-59dc-4614-ad1f-ada159d30333" />
-<img width="582" height="413" alt="image" src="https://github.com/user-attachments/assets/6abbffd8-d490-41ca-9eb1-b79d13ce3a89" />
+![2025-07-3011-22-23online-video-cutter com-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/40c8ffc8-d752-417a-9b14-cd4372c38bb5)
 
 * 1:1 채팅문의 :웹소켓을 활용해 실시간 채팅기능과 안 읽은 메세지 수 표시 기능 구현
 
