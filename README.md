@@ -133,16 +133,8 @@
 
 ---
 
-## 관리자 페이지
+## 아키텍쳐  [링크](https://bottlenose-asparagus-798.notion.site/GitHub-Actions-Docker-NGINX-EC2-RDS-CI-CD-1141bba98c5780a8b299e9806e62544e)
 
----
-리뷰관리
-이벤트, 공지등록
-이메일 문의
-1:1 채팅
-
-
-## 아키텍쳐  
 <img width="649" height="389" alt="image" src="https://github.com/user-attachments/assets/5ddc1bba-4a8d-4b32-8abc-580c39da42cc" />
 
   
