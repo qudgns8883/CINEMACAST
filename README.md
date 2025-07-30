@@ -25,7 +25,7 @@
 ## 💡 담당기능
 
 ## 어드민 
----
+
 ### 메인 페이지
 <table>
   <tr>
@@ -108,6 +108,8 @@
 <img width="582" height="413" alt="image" src="https://github.com/user-attachments/assets/6abbffd8-d490-41ca-9eb1-b79d13ce3a89" />
 
 * 1:1 채팅문의 :웹소켓을 활용해 실시간 채팅기능과 안 읽은 메세지 수 표시 기능 구현
+
+<br/>
 
 <img width="500" height="500" alt="image" src="https://github.com/user-attachments/assets/5e9ced3c-8a1b-4571-bf89-b8ee4cd0928f" />
 <img width="500" height="500" alt="image" src="https://github.com/user-attachments/assets/28d9e76c-97f4-402c-bf36-e59bb68c3948" />
