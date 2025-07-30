@@ -10,11 +10,12 @@
 - **팀장**: 김소연 - 회원가입, 로그인, 관리자, 결제 페이지 개발
 - **팀원1**: 조혜령 - 기획서 작성, 퍼블리싱, 좌석 선택 및 상영시간표 구현
 - **팀원2**: 김우영 - TMDB.API를 이용한 영화 정보 페이지 개발
-- **팀원3**: 이병훈 - TMDB.API를 이용한 영화 정보 페이지 및 고객센터 구현
+- **팀원3**: 이병훈 - TMDB.API를 이용한 영화 정보 페이지 및 고객센터 구현, CI/CD 파이프라인 구축 및 무중단 배포
 
 ## ⚙️ 사용된 기술
 - Java, Spring Boot, Spring Data JPA, Spring Security, MySQL
 - CSS3, HTML5, BOOTSTRAP, JQUERY, Thymeleaf
+- CI/CD/DevOps Tools: GitHub Actions, Docker, Docker Compose, Nginx, (AWS EC2, AWS RDS)
 
 <br/>
 
